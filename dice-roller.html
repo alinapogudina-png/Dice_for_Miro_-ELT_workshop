@@ -6,8 +6,7 @@
     <title>Dice Roller</title>
     <style>
         :root {
-            --dice-color: #FF0000;
-            --dot-color: #FFFFFF;
+            --dice-color: #574FFF; /* Default dice color */
             --neon-color: #00FFFF;
             --animation-duration: 0.8s; /* normal */
         }
@@ -23,157 +22,80 @@
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            -webkit-user-select: none; /* Запрет выделения текста */
+            -webkit-user-select: none; /* Disable text selection */
             -moz-user-select: none;
             -ms-user-select: none;
             user-select: none;
         }
 
         .dice-container {
-            width: 80%; /* Занимаем 80% от iframe */
+            width: 80%; /* Takes 80% of iframe's width/height */
             height: 80%;
-            max-width: 150px; /* Максимальный размер кубика */
+            max-width: 150px; /* Maximum size for the dice */
             max-height: 150px;
             position: relative;
-            /* Общие стили для контейнера */
-            border-radius: 15%; 
-            box-sizing: border-box; /* Учитываем padding/border в размере */
-            box-shadow: none; /* Нет тени по умолчанию */
+            border-radius: 20%; /* Softer corners */
+            box-sizing: border-box; 
+            background-color: var(--dice-color); /* Dice color set on container */
+            display: flex; /* For centering the number */
+            justify-content: center;
+            align-items: center;
+            /* No default box-shadow */
+            box-shadow: none; 
+            transition: box-shadow 0.3s ease-out; /* Smooth neon transition */
         }
-        /* Неоновая подсветка применяется к самому контейнеру */
+        /* Neon effect applies to the main container */
         .dice-container.neon {
             box-shadow: 0 0 10px var(--neon-color), 0 0 25px var(--neon-color), 0 0 50px var(--neon-color);
         }
 
-        /* --- Стили для 3D-кубика --- */
-        .dice-container.style-3d {
-            perspective: 500px; /* Для 3D-эффекта */
-            transform-style: preserve-3d;
-            transition: transform var(--animation-duration) ease-out; /* Анимация броска */
-        }
-        .dice-container.style-3d .face {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background-color: var(--dice-color);
-            border: 1px solid rgba(0, 0, 0, 0.2);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: var(--dot-color);
+        .dice-number {
+            color: #FFFFFF; /* White number by default */
+            font-size: 8vw; /* Large and responsive font size */
+            min-font-size: 40px; /* Minimum font size to prevent tiny numbers */
             font-weight: bold;
-            border-radius: 15%;
-            box-sizing: border-box;
-            /* 3D faces are always visible */
-            opacity: 1; 
-            visibility: visible;
+            line-height: 1; /* Ensure single line */
+            display: block; /* To apply width/height correctly */
+            /* Animation for the number */
+            animation: bounce 0.5s ease-out;
         }
-        /* 3D face positioning */
-        .dice-container.style-3d .face-1 { transform: rotateY(   0deg ) translateZ( 50% ); }
-        .dice-container.style-3d .face-2 { transform: rotateX( 180deg ) translateZ( 50% ); }
-        .dice-container.style-3d .face-3 { transform: rotateY(  90deg ) translateZ( 50% ); }
-        .dice-container.style-3d .face-4 { transform: rotateY( -90deg ) translateZ( 50% ); }
-        .dice-container.style-3d .face-5 { transform: rotateX(  90deg ) translateZ( 50% ); }
-        .dice-container.style-3d .face-6 { transform: rotateX( -90deg ) translateZ( 50% ); }
 
-        /* Hide numbers, show dots in 3D */
-        .dice-container.style-3d .face .number { display: none; }
-        .dice-container.style-3d .face .dot { display: block; }
+        @keyframes bounce {
+            0% { transform: scale(0.8); opacity: 0; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
 
-
-        /* --- Стили для 2D-кубика (flat) --- */
-        .dice-container.style-2d {
-            /* No 3D perspective/transforms for 2D */
-            perspective: none;
-            transform-style: flat;
-            transition: none;
-            border: none;
-            border-radius: 20%; /* Softer corners for flat */
-            background-color: var(--dice-color); /* Container provides the background color */
-            display: flex; /* For centering the number */
-            justify-content: center;
-            align-items: center;
-        }
-        .dice-container.style-2d .face {
-            /* All faces are hidden in 2D mode, only the active one is shown */
-            position: absolute;
-            top: 0; left: 0;
-            transform: none !important; /* Override any 3D transforms */
-            background-color: transparent; /* Faces themselves are transparent in flat mode */
-            border: none;
-            opacity: 0; 
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-        }
-        .dice-container.style-2d .face.active {
-            opacity: 1; /* Only the active face is visible */
-            visibility: visible;
-            position: relative; /* Active face takes up space */
-            width: 100%; height: 100%;
-        }
-        /* Show numbers, hide dots in 2D */
-        .dice-container.style-2d .face .number { 
-            display: block;
-            font-size: 8vw; /* Large and responsive */
-            min-font-size: 40px; /* Minimum size */
-            line-height: 1;
-        }
-        .dice-container.style-2d .face .dot { display: none; }
-
-        /* --- Dots styles (for 3D mode) --- */
-        .dot {
-            position: absolute;
-            width: 15%;
-            height: 15%;
-            background-color: var(--dot-color);
-            border-radius: 50%;
-            box-shadow: inset 0 2px 3px rgba(0,0,0,0.5); /* Inner shadow for depth */
-        }
-        /* Dot positioning */
-        .dot-tl { top: 15%; left: 15%; }
-        .dot-tr { top: 15%; right: 15%; }
-        .dot-bl { bottom: 15%; left: 15%; }
-        .dot-br { bottom: 15%; right: 15%; }
-        .dot-c { top: 50%; left: 50%; transform: translate(-50%, -50%); }
-        .dot-cl { top: 50%; left: 15%; transform: translateY(-50%); }
-        .dot-cr { top: 50%; right: 15%; transform: translateY(-50%); }
-        
-        /* Responsive adjustments for dots (for smaller dice) */
+        /* Responsive font size adjustments for very small containers */
         @media (max-width: 150px) {
-             .dot { width: 18%; height: 18%; }
+             .dice-number { font-size: 50px; }
         }
-         @media (max-width: 100px) {
-             .dot { width: 20%; height: 20%; }
+        @media (max-width: 100px) {
+             .dice-number { font-size: 30px; }
         }
     </style>
 </head>
 <body>
     <div id="dice" class="dice-container">
-        <div class="face face-1" data-value="1"><span class="dot dot-c"></span><span class="number">1</span></div>
-        <div class="face face-2" data-value="2"><span class="dot dot-tl"></span><span class="dot dot-br"></span><span class="number">2</span></div>
-        <div class="face face-3" data-value="3"><span class="dot dot-tl"></span><span class="dot dot-c"></span><span class="dot dot-br"></span><span class="number">3</span></div>
-        <div class="face face-4" data-value="4"><span class="dot dot-tl"></span><span class="dot dot-tr"></span><span class="dot dot-bl"></span><span class="dot dot-br"></span><span class="number">4</span></div>
-        <div class="face face-5" data-value="5"><span class="dot dot-tl"></span><span class="dot dot-tr"></span><span class="dot dot-c"></span><span class="dot dot-bl"></span><span class="dot dot-br"></span><span class="number">5</span></div>
-        <div class="face face-6" data-value="6"><span class="dot dot-tl"></span><span class="dot dot-tr"></span><span class="dot dot-cl"></span><span class="dot dot-cr"></span><span class="dot dot-bl"></span><span class="dot dot-br"></span><span class="number">6</span></div>
+        <span id="diceNumber" class="dice-number">1</span>
     </div>
 
     <audio id="diceSound" src="https://files.catbox.moe/xk6v0c.mp3" preload="auto"></audio>
 
     <script>
         const dice = document.getElementById('dice');
+        const diceNumberSpan = document.getElementById('diceNumber');
         const diceSound = document.getElementById('diceSound');
         let isRolling = false;
         let enableSound = false;
-        let currentStyle = '3d'; // '3d' or '2d'
 
         function applySettings() {
             const params = new URLSearchParams(window.location.search);
             const root = document.documentElement;
 
-            root.style.setProperty('--dice-color', params.get('diceColor') || '#FF0000');
-            root.style.setProperty('--dot-color', params.get('dotColor') || '#FFFFFF');
+            root.style.setProperty('--dice-color', params.get('diceColor') || '#574FFF');
             
-            // Apply neon effect
+            // Neon effect
             if (params.get('neon') === 'true') {
                 dice.classList.add('neon');
                 root.style.setProperty('--neon-color', params.get('neonColor') || '#00FFFF');
@@ -183,16 +105,13 @@
 
             enableSound = params.get('sound') === 'true';
 
-            // Apply style (flat or 3d)
-            currentStyle = (params.get('style') === 'flat') ? '2d' : '3d';
-            dice.classList.remove('style-3d', 'style-2d'); // Clear previous style
-            dice.classList.add('style-' + currentStyle); // Add current style class
-
             let duration = '0.8s'; // normal
             switch (params.get('speed')) {
                 case 'slow': duration = '1.2s'; break;
                 case 'fast': duration = '0.4s'; break;
             }
+            // The animation for the number is CSS-based now, this duration mainly for sound delay if any.
+            // For now, it won't directly affect CSS animation, but kept for future.
             root.style.setProperty('--animation-duration', duration);
         }
 
@@ -208,38 +127,15 @@
 
             const randomValue = Math.floor(Math.random() * 6) + 1; // 1 to 6
 
-            if (currentStyle === '2d') {
-                // 2D style: just show the number
-                document.querySelectorAll('.face').forEach(face => face.classList.remove('active'));
-                const activeFace = document.querySelector(`.face-${randomValue}`);
-                if (activeFace) {
-                    activeFace.classList.add('active');
-                }
-                setTimeout(() => { isRolling = false; }, parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--animation-duration')) * 1000);
-            } else {
-                // 3D style: apply rotation
-                let rotX, rotY;
-                // Predefined rotations for each face value to appear on top
-                switch (randomValue) {
-                    case 1: rotX = 0; rotY = 0; break;
-                    case 2: rotX = 180; rotY = 0; break;
-                    case 3: rotX = 0; rotY = 90; break;
-                    case 4: rotX = 0; rotY = -90; break;
-                    case 5: rotX = -90; rotY = 0; break;
-                    case 6: rotX = 90; rotY = 0; break;
-                }
-                
-                // Add extra random rotations for a more dynamic look
-                const extraRotX = Math.floor(Math.random() * 4) * 360;
-                const extraRotY = Math.floor(Math.random() * 4) * 360;
-
-                dice.style.transform = `rotateX(${rotX + extraRotX}deg) rotateY(${rotY + extraRotY}deg)`;
-
-                // Reset isRolling after animation completes
-                setTimeout(() => {
-                    isRolling = false;
-                }, parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--animation-duration')) * 1000);
-            }
+            // Trigger animation and update number
+            diceNumberSpan.style.animation = 'none'; // Reset animation
+            void diceNumberSpan.offsetWidth; // Trigger reflow
+            diceNumberSpan.style.animation = `bounce ${getComputedStyle(document.documentElement).getPropertyValue('--animation-duration')} ease-out`;
+            diceNumberSpan.textContent = randomValue;
+            
+            setTimeout(() => {
+                isRolling = false;
+            }, parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--animation-duration')) * 1000);
         }
 
         // Event Listeners
