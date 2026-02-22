@@ -35,7 +35,8 @@
             transform-style: preserve-3d;
             transition: transform var(--animation-duration) ease-out; /* Анимация броска */
             border-radius: 15%; /* Немного скругленные грани */
-            /* OLD: box-shadow: 0 10px 20px rgba(0,0,0,0.5); */ /* NEW: Удален стандартный box-shadow */
+            /* NEW: Убрал любую стандартную тень, если нет неона */
+            box-shadow: none; 
         }
         .dice-container.neon {
             box-shadow: 0 0 10px var(--neon-color), 0 0 25px var(--neon-color), 0 0 50px var(--neon-color);
@@ -54,6 +55,10 @@
             font-weight: bold;
             border-radius: 15%; /* Скругление граней */
             box-sizing: border-box; /* Учитываем padding/border в размере */
+            
+            /* NEW: Для 3D все грани должны быть видны */
+            opacity: 1; 
+            visibility: visible;
         }
         
         /* 3D-позиционирование граней */
@@ -64,40 +69,45 @@
         .face-5 { transform: rotateX(  90deg ) translateZ( 50% ); }
         .face-6 { transform: rotateX( -90deg ) translateZ( 50% ); }
 
-        /* Для плоского стиля */
+        /* --- Стили для плоского кубика (flat) --- */
+        .dice-container.flat {
+            box-shadow: none !important; /* NEW: Гарантированно убираем любые тени для плоского */
+            border: none; /* NEW: Убираем бордюр для плоского */
+            border-radius: 20%; /* NEW: Более мягкие углы для плоского */
+            background-color: var(--dice-color); /* NEW: Задаем фон контейнера для плоского */
+            display: flex; /* NEW: Сделаем flex контейнером для плоского */
+            justify-content: center;
+            align-items: center;
+        }
         .dice-container.flat .face {
-            transform: none !important; /* Отменяем 3D-трансформации */
-            position: absolute; /* Теперь все грани в flat-режиме будут на одном месте */
-            opacity: 0; /* Изначально все грани скрыты в flat-режиме */
-            visibility: hidden; /* Скрываем неактивные грани */
-            transition: opacity 0.3s ease, visibility 0.3s ease;
+            position: absolute; /* NEW: Все грани в плоском режиме находятся на одной позиции */
+            transform: none !important; /* NEW: Сброс 3D-трансформаций для всех граней в flat-режиме */
+            opacity: 0; /* NEW: Изначально все грани скрыты */
+            visibility: hidden; /* NEW: Скрываем неактивные грани */
+            transition: opacity 0.3s ease, visibility 0.3s ease; /* NEW: Плавный переход */
+            background-color: transparent; /* NEW: Цвет фона задается у родителя .dice-container.flat */
+            border: none; /* NEW: Убираем бордюр */
         }
         .dice-container.flat .face.active {
-            opacity: 1; /* Активная грань показана */
+            opacity: 1; /* NEW: Активная грань показана */
             visibility: visible;
+            position: relative; /* NEW: Чтобы активная грань была в потоке */
+            width: 100%; height: 100%; /* NEW: Активная грань занимает весь размер */
         }
-
-        /* NEW: Стили для цифры в плоском режиме */
-        .dice-container.flat .face .number {
-            font-size: 8vw; /* Сделано крупнее, резиновое */
-            min-font-size: 40px; /* Минимальный размер */
+        /* --- Отображение чисел/точек в зависимости от стиля --- */
+        /* В 3D-стиле (по умолчанию) */
+        .dice-container:not(.flat) .face .number { display: none; } /* Числа скрыты */
+        .dice-container:not(.flat) .face .dot { display: block; } /* Точки видны */
+        
+        /* В плоском (flat) стиле */
+        .dice-container.flat .face .number { 
+            display: block; /* Числа видны */
+            font-size: 8vw; /* NEW: Сделано крупнее, резиновое */
+            min-font-size: 40px; /* NEW: Минимальный размер */
             line-height: 1;
         }
-        .dice-container.flat .face .dot {
-            display: none; /* Точки скрыты в flat-стиле */
-        }
+        .dice-container.flat .face .dot { display: none; } /* Точки скрыты */
 
-        /* NEW: В 3D-стиле цифры скрыты, точки видны */
-        .dice-container:not(.flat) .face .number {
-            display: none;
-        }
-        .dice-container:not(.flat) .face .dot {
-            display: block; /* Убеждаемся, что точки видны */
-        }
-        /* NEW: Базовая грань 1 для 3D-стиля, чтобы всегда что-то было видно */
-        .dice-container:not(.flat) {
-            transform: rotateX(0deg) rotateY(0deg); /* Изначально показываем грань 1 */
-        }
 
         /* Точки для 3D */
         .dot {
@@ -106,7 +116,7 @@
             height: 15%;
             background-color: var(--dot-color);
             border-radius: 50%;
-            /* box-shadow: inset 0 2px 3px rgba(0,0,0,0.5); */ /* NEW: Удален стандартный box-shadow */
+            box-shadow: inset 0 2px 3px rgba(0,0,0,0.5); /* NEW: Добавил тень точкам, чтобы они не выглядели плоскими */
         }
         /* Позиционирование точек для каждой грани */
         .dot-tl { top: 15%; left: 15%; }
@@ -228,7 +238,6 @@
         // Initial setup
         applySettings();
         // Initial random roll
-        // NEW: Первый бросок при загрузке, чтобы кубик сразу был виден с результатом
         setTimeout(() => {
             rollDice();
         }, 50);
