@@ -35,7 +35,7 @@
             transform-style: preserve-3d;
             transition: transform var(--animation-duration) ease-out; /* Анимация броска */
             border-radius: 15%; /* Немного скругленные грани */
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5); /* Общая тень */
+            /* OLD: box-shadow: 0 10px 20px rgba(0,0,0,0.5); */ /* NEW: Удален стандартный box-shadow */
         }
         .dice-container.neon {
             box-shadow: 0 0 10px var(--neon-color), 0 0 25px var(--neon-color), 0 0 50px var(--neon-color);
@@ -47,20 +47,16 @@
             height: 100%;
             background-color: var(--dice-color);
             border: 1px solid rgba(0, 0, 0, 0.2);
-            display: flex; /* Всегда flex, чтобы не прятать */
+            display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 4em; /* Размер цифры для 2D */
-            color: var(--dot-color); /* Цвет цифры для 2D */
+            color: var(--dot-color); /* Цвет цифры/точек */
             font-weight: bold;
             border-radius: 15%; /* Скругление граней */
             box-sizing: border-box; /* Учитываем padding/border в размере */
-            /* NEW: Скрываем точки для 2D режима */
-            transition: opacity 0.3s ease; /* Для плавного скрытия/показа */
         }
         
         /* 3D-позиционирование граней */
-        /* Эти трансформации ставят грань в ее 3D-положение */
         .face-1 { transform: rotateY(   0deg ) translateZ( 50% ); }
         .face-2 { transform: rotateX( 180deg ) translateZ( 50% ); }
         .face-3 { transform: rotateY(  90deg ) translateZ( 50% ); }
@@ -71,27 +67,37 @@
         /* Для плоского стиля */
         .dice-container.flat .face {
             transform: none !important; /* Отменяем 3D-трансформации */
-            position: absolute; /* Делаем абсолютным, чтобы показывать только одну грань */
+            position: absolute; /* Теперь все грани в flat-режиме будут на одном месте */
             opacity: 0; /* Изначально все грани скрыты в flat-режиме */
             visibility: hidden; /* Скрываем неактивные грани */
-            font-size: 6vw; /* Резиновый размер для цифры */
-            min-font-size: 40px; /* Минимальный размер цифры */
-            /* Для плоского стиля точки всегда скрыты */
-            display: flex; /* Чтобы цифра была по центру */
+            transition: opacity 0.3s ease, visibility 0.3s ease;
         }
-
         .dice-container.flat .face.active {
             opacity: 1; /* Активная грань показана */
             visibility: visible;
         }
+
+        /* NEW: Стили для цифры в плоском режиме */
+        .dice-container.flat .face .number {
+            font-size: 8vw; /* Сделано крупнее, резиновое */
+            min-font-size: 40px; /* Минимальный размер */
+            line-height: 1;
+        }
         .dice-container.flat .face .dot {
             display: none; /* Точки скрыты в flat-стиле */
         }
-        /* NEW: В 3D-стиле текст скрыт */
-        .dice-container:not(.flat) .face span.number {
+
+        /* NEW: В 3D-стиле цифры скрыты, точки видны */
+        .dice-container:not(.flat) .face .number {
             display: none;
         }
-
+        .dice-container:not(.flat) .face .dot {
+            display: block; /* Убеждаемся, что точки видны */
+        }
+        /* NEW: Базовая грань 1 для 3D-стиля, чтобы всегда что-то было видно */
+        .dice-container:not(.flat) {
+            transform: rotateX(0deg) rotateY(0deg); /* Изначально показываем грань 1 */
+        }
 
         /* Точки для 3D */
         .dot {
@@ -100,7 +106,7 @@
             height: 15%;
             background-color: var(--dot-color);
             border-radius: 50%;
-            box-shadow: inset 0 2px 3px rgba(0,0,0,0.5); /* Внутренняя тень точки */
+            /* box-shadow: inset 0 2px 3px rgba(0,0,0,0.5); */ /* NEW: Удален стандартный box-shadow */
         }
         /* Позиционирование точек для каждой грани */
         .dot-tl { top: 15%; left: 15%; }
@@ -123,7 +129,6 @@
 </head>
 <body>
     <div id="dice" class="dice-container">
-        <!-- NEW: Добавил span с классом "number" для отображения числа в flat-стиле -->
         <div class="face face-1" data-value="1"><span class="dot dot-c"></span><span class="number">1</span></div>
         <div class="face face-2" data-value="2"><span class="dot dot-tl"></span><span class="dot dot-br"></span><span class="number">2</span></div>
         <div class="face face-3" data-value="3"><span class="dot dot-tl"></span><span class="dot dot-c"></span><span class="dot dot-br"></span><span class="number">3</span></div>
@@ -132,13 +137,11 @@
         <div class="face face-6" data-value="6"><span class="dot dot-tl"></span><span class="dot dot-tr"></span><span class="dot dot-cl"></span><span class="dot dot-cr"></span><span class="dot dot-bl"></span><span class="dot dot-br"></span><span class="number">6</span></div>
     </div>
 
-    <!-- NEW: Audio element for dice sound -->
     <audio id="diceSound" src="https://files.catbox.moe/xk6v0c.mp3" preload="auto"></audio>
 
     <script>
         const dice = document.getElementById('dice');
         const diceSound = document.getElementById('diceSound');
-        let currentRotation = {x: 0, y: 0};
         let isRolling = false;
         let enableSound = false;
 
@@ -191,7 +194,6 @@
                 const activeFace = document.querySelector(`.face-${randomValue}`);
                 if (activeFace) {
                     activeFace.classList.add('active');
-                    // activeFace.textContent = randomValue; // Removed, now uses span.number
                 }
                 setTimeout(() => { isRolling = false; }, parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--animation-duration')) * 1000);
             } else {
@@ -226,10 +228,10 @@
         // Initial setup
         applySettings();
         // Initial random roll
-        // NEW: Добавляем таймаут для гарантированной прорисовки
+        // NEW: Первый бросок при загрузке, чтобы кубик сразу был виден с результатом
         setTimeout(() => {
             rollDice();
-        }, 50); // Небольшая задержка для прорисовки перед первым броском
+        }, 50);
     </script>
 </body>
 </html>
