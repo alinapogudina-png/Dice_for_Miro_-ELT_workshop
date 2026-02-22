@@ -202,7 +202,7 @@
             numberColor: document.getElementById('numberColor'),
             neonToggle: document.getElementById('neonToggle'),
             neonColor: document.getElementById('neonColor'),
-            diceSoundToggle: document.getElementById('diceSoundToggle'), // Renamed
+            diceSoundToggle: document.getElementById('diceSoundToggle'),
             coinSoundToggle: document.getElementById('coinSoundToggle'), 
             generateBtn: document.getElementById('generateBtn'),
             copyBtn: document.getElementById('copyBtn'),
@@ -269,7 +269,6 @@
             const toolUrl = `${baseUrl}?${paramsString}`;
             const width = controls.coinToggle.checked ? '150' : '200'; 
             const height = controls.coinToggle.checked ? '150' : '200';
-            // iframe border-radius will now always be 15px, tool itself will manage its shape
             const iframeCode = `<iframe src="${toolUrl}" width="${width}" height="${height}" frameborder="0" allowfullscreen="true" style="border-radius: 15px;"></iframe>`; 
             controls.generatedCode.value = iframeCode;
         }
@@ -292,7 +291,7 @@
         controls.neonToggle.addEventListener('change', toggleInputStates);
         controls.coinToggle.addEventListener('change', toggleInputStates);
         controls.woodToggle.addEventListener('change', toggleInputStates);
-        controls.diceSoundToggle.addEventListener('change', updatePreview); // NEW: Corrected name
+        controls.diceSoundToggle.addEventListener('change', updatePreview); 
         controls.coinSoundToggle.addEventListener('change', updatePreview); 
 
         controls.generateBtn.addEventListener('click', generateCode);
