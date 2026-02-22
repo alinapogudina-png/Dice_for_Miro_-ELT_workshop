@@ -47,7 +47,7 @@
             height: 100%;
             background-color: var(--dice-color);
             border: 1px solid rgba(0, 0, 0, 0.2);
-            display: flex;
+            display: flex; /* Всегда flex, чтобы не прятать */
             justify-content: center;
             align-items: center;
             font-size: 4em; /* Размер цифры для 2D */
@@ -55,9 +55,12 @@
             font-weight: bold;
             border-radius: 15%; /* Скругление граней */
             box-sizing: border-box; /* Учитываем padding/border в размере */
+            /* NEW: Скрываем точки для 2D режима */
+            transition: opacity 0.3s ease; /* Для плавного скрытия/показа */
         }
-
+        
         /* 3D-позиционирование граней */
+        /* Эти трансформации ставят грань в ее 3D-положение */
         .face-1 { transform: rotateY(   0deg ) translateZ( 50% ); }
         .face-2 { transform: rotateX( 180deg ) translateZ( 50% ); }
         .face-3 { transform: rotateY(  90deg ) translateZ( 50% ); }
@@ -67,19 +70,28 @@
 
         /* Для плоского стиля */
         .dice-container.flat .face {
-            background-color: var(--dice-color);
-            box-shadow: none;
-            border-radius: 15%;
-            transform: none !important;
-            display: none; /* Все грани скрыты */
+            transform: none !important; /* Отменяем 3D-трансформации */
+            position: absolute; /* Делаем абсолютным, чтобы показывать только одну грань */
+            opacity: 0; /* Изначально все грани скрыты в flat-режиме */
+            visibility: hidden; /* Скрываем неактивные грани */
             font-size: 6vw; /* Резиновый размер для цифры */
             min-font-size: 40px; /* Минимальный размер цифры */
+            /* Для плоского стиля точки всегда скрыты */
+            display: flex; /* Чтобы цифра была по центру */
         }
+
         .dice-container.flat .face.active {
-            display: flex; /* Активная грань показана */
-            position: relative; /* Чтобы была в потоке */
-            height: 100%; width: 100%;
+            opacity: 1; /* Активная грань показана */
+            visibility: visible;
         }
+        .dice-container.flat .face .dot {
+            display: none; /* Точки скрыты в flat-стиле */
+        }
+        /* NEW: В 3D-стиле текст скрыт */
+        .dice-container:not(.flat) .face span.number {
+            display: none;
+        }
+
 
         /* Точки для 3D */
         .dot {
@@ -102,23 +114,22 @@
         /* Стили для маленьких кубиков - чтобы точки были меньше */
         @media (max-width: 150px) {
              .dot { width: 18%; height: 18%; }
-             #dice-result { font-size: 50px; }
         }
          @media (max-width: 100px) {
              .dot { width: 20%; height: 20%; }
-             #dice-result { font-size: 30px; }
         }
 
     </style>
 </head>
 <body>
     <div id="dice" class="dice-container">
-        <div class="face face-1" data-value="1"><span class="dot dot-c"></span></div>
-        <div class="face face-2" data-value="2"><span class="dot dot-tl"></span><span class="dot dot-br"></span></div>
-        <div class="face face-3" data-value="3"><span class="dot dot-tl"></span><span class="dot dot-c"></span><span class="dot dot-br"></span></div>
-        <div class="face face-4" data-value="4"><span class="dot dot-tl"></span><span class="dot dot-tr"></span><span class="dot dot-bl"></span><span class="dot dot-br"></span></div>
-        <div class="face face-5" data-value="5"><span class="dot dot-tl"></span><span class="dot dot-tr"></span><span class="dot dot-c"></span><span class="dot dot-bl"></span><span class="dot dot-br"></span></div>
-        <div class="face face-6" data-value="6"><span class="dot dot-tl"></span><span class="dot dot-tr"></span><span class="dot dot-cl"></span><span class="dot dot-cr"></span><span class="dot dot-bl"></span><span class="dot dot-br"></span></div>
+        <!-- NEW: Добавил span с классом "number" для отображения числа в flat-стиле -->
+        <div class="face face-1" data-value="1"><span class="dot dot-c"></span><span class="number">1</span></div>
+        <div class="face face-2" data-value="2"><span class="dot dot-tl"></span><span class="dot dot-br"></span><span class="number">2</span></div>
+        <div class="face face-3" data-value="3"><span class="dot dot-tl"></span><span class="dot dot-c"></span><span class="dot dot-br"></span><span class="number">3</span></div>
+        <div class="face face-4" data-value="4"><span class="dot dot-tl"></span><span class="dot dot-tr"></span><span class="dot dot-bl"></span><span class="dot dot-br"></span><span class="number">4</span></div>
+        <div class="face face-5" data-value="5"><span class="dot dot-tl"></span><span class="dot dot-tr"></span><span class="dot dot-c"></span><span class="dot dot-bl"></span><span class="dot dot-br"></span><span class="number">5</span></div>
+        <div class="face face-6" data-value="6"><span class="dot dot-tl"></span><span class="dot dot-tr"></span><span class="dot dot-cl"></span><span class="dot dot-cr"></span><span class="dot dot-bl"></span><span class="dot dot-br"></span><span class="number">6</span></div>
     </div>
 
     <!-- NEW: Audio element for dice sound -->
@@ -126,10 +137,10 @@
 
     <script>
         const dice = document.getElementById('dice');
-        const diceSound = document.getElementById('diceSound'); // NEW
+        const diceSound = document.getElementById('diceSound');
         let currentRotation = {x: 0, y: 0};
         let isRolling = false;
-        let enableSound = false; // NEW
+        let enableSound = false;
 
         // Apply settings from URL parameters
         function applySettings() {
@@ -146,7 +157,7 @@
                 dice.classList.remove('neon');
             }
 
-            enableSound = params.get('sound') === 'true'; // NEW
+            enableSound = params.get('sound') === 'true';
 
             if (params.get('style') === 'flat') {
                 dice.classList.add('flat');
@@ -166,7 +177,7 @@
             if (isRolling) return;
             isRolling = true;
 
-            // NEW: Play sound if enabled
+            // Play sound if enabled
             if (enableSound) {
                 diceSound.currentTime = 0; // Reset sound to start
                 diceSound.play().catch(e => console.warn("Failed to play dice sound:", e));
@@ -180,7 +191,7 @@
                 const activeFace = document.querySelector(`.face-${randomValue}`);
                 if (activeFace) {
                     activeFace.classList.add('active');
-                    activeFace.textContent = randomValue; // Show number for flat style
+                    // activeFace.textContent = randomValue; // Removed, now uses span.number
                 }
                 setTimeout(() => { isRolling = false; }, parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--animation-duration')) * 1000);
             } else {
@@ -202,10 +213,6 @@
 
                 dice.style.transform = `rotateX(${rotX + extraRotX}deg) rotateY(${rotY + extraRotY}deg)`;
 
-                // Reset rotation for next roll (optional, could be removed for more random feeling)
-                currentRotation.x = rotX + extraRotX;
-                currentRotation.y = rotY + extraRotY;
-
                 // Reset isRolling after animation completes
                 setTimeout(() => {
                     isRolling = false;
@@ -219,7 +226,10 @@
         // Initial setup
         applySettings();
         // Initial random roll
-        setTimeout(rollDice, 100); // Roll once on load
+        // NEW: Добавляем таймаут для гарантированной прорисовки
+        setTimeout(() => {
+            rollDice();
+        }, 50); // Небольшая задержка для прорисовки перед первым броском
     </script>
 </body>
 </html>
