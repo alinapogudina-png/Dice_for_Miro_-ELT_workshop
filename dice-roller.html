@@ -23,45 +23,41 @@
             -moz-user-select: none;
             -ms-user-select: none;
             user-select: none;
-            overflow: hidden; /* Ensure body itself doesn't cause scrollbars */
+            overflow: hidden; 
         }
 
-        /* Outer wrapper for scaling neon effect and managing shape */
-        .game-tool-wrapper {
-            width: 100%; 
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: none; /* No default shadow */
-            transition: box-shadow 0.3s ease-out, border-radius 0.3s ease-out; /* Smooth neon transition and shape change */
-            padding: 1vw; /* Crucial for neon shadow to not be clipped */
-            box-sizing: border-box; /* Ensure padding is included in element's total size */
-            /* Default border-radius, will be overridden by JS */
-            border-radius: 20%; 
-        }
-        .game-tool-wrapper.neon {
-            box-shadow: 0 0 1vw var(--neon-color), 0 0 2.5vw var(--neon-color), 0 0 5vw var(--neon-color);
-        }
-
-        /* Inner container for the actual dice/coin content */
-        .tool-content {
-            width: 100%; 
-            height: 100%;
+        /* Main container for the tool (dice or coin) */
+        .tool-container {
+            width: 80%; 
+            height: 80%;
             max-width: 150px; /* Max size for the content itself */
             max-height: 150px;
             position: relative;
+            box-sizing: border-box; 
             display: flex; 
             justify-content: center;
             align-items: center;
-            border-radius: inherit; /* Inherit border-radius from wrapper for consistency */
-            overflow: hidden; /* Ensure image/content stays within bounds */
+            /* Default border-radius */
+            border-radius: 20%; 
+            /* Transition for filter property */
+            transition: filter 0.3s ease-out, background-color 0.3s ease-out, border-radius 0.3s ease-out;
+            filter: none; /* No glow by default */
         }
         
+        /* Neon effect using drop-shadow filter */
+        .tool-container.neon {
+            /* Using vw for responsive glow size, might need adjustment if iframe aspect ratio varies a lot */
+            filter: drop-shadow(0 0 0.8vw var(--neon-color)) 
+                    drop-shadow(0 0 1.5vw var(--neon-color)) 
+                    drop-shadow(0 0 2.5vw var(--neon-color));
+        }
+
         /* --- Regular Dice specific styles --- */
         .dice-style {
             background-color: var(--dice-background-color);
-            transition: background-color 0.3s ease-out;
+            width: 100%; height: 100%;
+            border-radius: inherit; /* Inherit border-radius from tool-container */
+            display: flex; justify-content: center; align-items: center;
         }
 
         .dice-number {
@@ -77,25 +73,28 @@
 
         /* --- Wooden Dice specific styles --- */
         .wood-style {
-            background-color: transparent; /* Background image will cover it */
+            width: 100%; height: 100%;
+            border-radius: inherit; /* Inherit border-radius from tool-container */
+            overflow: hidden; /* Ensure image stays within bounds */
         }
         .wood-style img {
             width: 100%; height: 100%;
-            object-fit: contain; /* Scale image to fit, maintain aspect ratio */
+            object-fit: cover; /* Cover the area, may crop image slightly */
             display: block;
-            animation: bounce 0.5s ease-out; /* Reuse bounce for number images */
+            animation: bounce 0.5s ease-out;
         }
 
         /* --- Coin specific styles --- */
         .coin-style {
-            /* border-radius is handled by wrapper and inherited */
-            background-color: transparent;
+            border-radius: 50%; /* Round shape for coin */
+            width: 100%; height: 100%;
+            overflow: hidden; /* Ensure image stays within bounds */
         }
         .coin-style img {
             width: 100%; height: 100%;
             object-fit: contain; /* Scale image to fit, maintain aspect ratio */
             display: block;
-            animation: coinFlipAnim 0.3s ease-out; /* Simple flip animation */
+            animation: coinFlipAnim 0.3s ease-out;
         }
 
         @keyframes bounce {
@@ -109,7 +108,6 @@
         }
 
         /* Responsive font size adjustments for very small containers */
-        /* These media queries help override vw units for very small absolute sizes */
         @media (max-width: 150px) {
              .dice-number { font-size: 50px; }
         }
@@ -119,24 +117,21 @@
     </style>
 </head>
 <body>
-    <div id="toolWrapper" class="game-tool-wrapper">
-        <div id="toolContent" class="tool-content">
-            <!-- Content will be dynamically loaded/swapped by JS -->
-        </div>
+    <div id="toolContainer" class="tool-container">
+        <!-- Content will be dynamically loaded/swapped by JS -->
     </div>
 
     <audio id="diceSoundEffect" src="https://files.catbox.moe/xk6v0c.mp3" preload="auto"></audio>
     <audio id="coinSoundEffect" src="https://files.catbox.moe/d36fio.mp3" preload="auto"></audio>
 
     <script>
-        const toolWrapper = document.getElementById('toolWrapper');
-        const toolContent = document.getElementById('toolContent');
+        const toolContainer = document.getElementById('toolContainer');
         const diceSoundEffect = document.getElementById('diceSoundEffect');
-        const coinSoundEffect = document.getElementById('coinSoundEffect'); // NEW: Coin sound element
+        const coinSoundEffect = document.getElementById('coinSoundEffect');
         
         let isRolling = false;
-        let enableDiceSound = false; // Renamed
-        let enableCoinSound = false; // NEW: Enable coin sound
+        let enableDiceSound = false;
+        let enableCoinSound = false;
 
         // Your Coin images
         const coinImages = {
@@ -162,47 +157,44 @@
             const isWood = params.get('wood') === 'true';
             
             // Clear existing content and classes
-            toolContent.innerHTML = '';
-            toolContent.classList.remove('dice-style', 'wood-style', 'coin-style');
-            toolWrapper.classList.remove('neon'); 
-            
-            // Apply neon effect to the wrapper
+            toolContainer.innerHTML = '';
+            toolContainer.classList.remove('dice-style', 'wood-style', 'coin-style', 'neon');
+            toolContainer.style.backgroundColor = 'transparent'; // Reset background
+            toolContainer.style.borderRadius = isCoin ? '50%' : '20%'; // Set shape directly
+
+            // Apply neon effect (filter)
             if (params.get('neon') === 'true') {
-                toolWrapper.classList.add('neon');
+                toolContainer.classList.add('neon');
                 root.style.setProperty('--neon-color', params.get('neonColor') || '#00FFFF');
             }
 
-            // Set border-radius for the wrapper based on tool type
-            toolWrapper.style.borderRadius = isCoin ? '50%' : '20%';
-
-            enableDiceSound = params.get('diceSound') === 'true'; // NEW: Use diceSound param
-            enableCoinSound = params.get('coinSound') === 'true'; // NEW: Use coinSound param
+            enableDiceSound = params.get('diceSound') === 'true';
+            enableCoinSound = params.get('coinSound') === 'true';
 
             if (isCoin) {
                 // --- Coin setup ---
-                toolContent.classList.add('coin-style');
+                toolContainer.classList.add('coin-style');
                 const coinImage = document.createElement('img');
                 coinImage.id = 'coinImage';
-                coinImage.src = coinImages.heads; // Default to heads
+                coinImage.src = coinImages.heads;
                 coinImage.alt = 'Coin Heads';
-                toolContent.appendChild(coinImage);
+                toolContainer.appendChild(coinImage);
             } else if (isWood) {
                 // --- Wooden Dice setup ---
-                toolContent.classList.add('wood-style');
+                toolContainer.classList.add('wood-style');
                 const woodDiceImage = document.createElement('img');
                 woodDiceImage.id = 'woodDiceImage';
-                woodDiceImage.src = woodDiceImages[1]; // Default to face 1
+                woodDiceImage.src = woodDiceImages[1];
                 woodDiceImage.alt = 'Wooden Dice Face 1';
-                toolContent.appendChild(woodDiceImage);
-                root.style.setProperty('--dice-background-color', 'transparent'); // Ensure no background color for wood
+                toolContainer.appendChild(woodDiceImage);
             } else {
                 // --- Regular Dice setup ---
-                toolContent.classList.add('dice-style');
+                toolContainer.classList.add('dice-style');
                 const diceNumberSpan = document.createElement('span');
                 diceNumberSpan.id = 'diceNumber';
                 diceNumberSpan.classList.add('dice-number');
                 diceNumberSpan.textContent = '1';
-                toolContent.appendChild(diceNumberSpan);
+                toolContainer.appendChild(diceNumberSpan);
 
                 root.style.setProperty('--dice-background-color', params.get('diceColor') || '#574FFF');
                 root.style.setProperty('--number-color', params.get('numberColor') || '#FFFFFF');
@@ -213,19 +205,17 @@
             if (isRolling) return;
             isRolling = true;
 
-            const isCoinMode = toolContent.classList.contains('coin-style');
+            const isCoinMode = toolContainer.classList.contains('coin-style');
 
-            // Play sound based on mode and enabled setting
             if (isCoinMode && enableCoinSound) {
                 coinSoundEffect.currentTime = 0;
                 coinSoundEffect.play().catch(e => console.warn("Failed to play coin sound:", e));
-            } else if (!isCoinMode && enableDiceSound) { // For dice and wooden dice
+            } else if (!isCoinMode && enableDiceSound) {
                 diceSoundEffect.currentTime = 0;
                 diceSoundEffect.play().catch(e => console.warn("Failed to play dice sound:", e));
             }
 
             if (isCoinMode) {
-                // --- Coin flip logic ---
                 const coinImage = document.getElementById('coinImage');
                 const randomSide = Math.random() < 0.5 ? 'heads' : 'tails';
                 
@@ -238,8 +228,7 @@
                 setTimeout(() => {
                     isRolling = false;
                 }, 300);
-            } else if (toolContent.classList.contains('wood-style')) {
-                // --- Wooden Dice roll logic ---
+            } else if (toolContainer.classList.contains('wood-style')) {
                 const woodDiceImage = document.getElementById('woodDiceImage');
                 const randomValue = Math.floor(Math.random() * 6) + 1;
                 
@@ -253,7 +242,6 @@
                     isRolling = false;
                 }, 500);
             } else {
-                // --- Regular Dice roll logic ---
                 const diceNumberSpan = document.getElementById('diceNumber');
                 const randomValue = Math.floor(Math.random() * 6) + 1;
                 
@@ -269,7 +257,7 @@
         }
 
         // Event Listeners
-        toolContent.addEventListener('click', rollTool);
+        toolContainer.addEventListener('click', rollTool);
 
         // Initial setup
         applySettings();
