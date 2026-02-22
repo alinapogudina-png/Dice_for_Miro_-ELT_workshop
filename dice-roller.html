@@ -22,7 +22,6 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            perspective: 500px; /* Для 3D-эффекта */
             cursor: pointer;
         }
 
@@ -32,12 +31,16 @@
             max-width: 150px; /* Максимальный размер кубика */
             max-height: 150px;
             position: relative;
+            /* Default for 3D cube */
+            perspective: 500px;
             transform-style: preserve-3d;
-            transition: transform var(--animation-duration) ease-out; /* Анимация броска */
-            border-radius: 15%; /* Немного скругленные грани */
-            /* NEW: Убрал любую стандартную тень, если нет неона */
+            transition: transform var(--animation-duration) ease-out; /* Animation for 3D roll */
+            border-radius: 15%; /* Скругленные грани */
+            /* No default box-shadow, only neon if applied */
             box-shadow: none; 
         }
+
+        /* Neon effect applies to the main container for both 3D and Flat */
         .dice-container.neon {
             box-shadow: 0 0 10px var(--neon-color), 0 0 25px var(--neon-color), 0 0 50px var(--neon-color);
         }
@@ -46,22 +49,21 @@
             position: absolute;
             width: 100%;
             height: 100%;
-            background-color: var(--dice-color);
+            background-color: var(--dice-color); /* Цвет грани */
             border: 1px solid rgba(0, 0, 0, 0.2);
             display: flex;
             justify-content: center;
             align-items: center;
-            color: var(--dot-color); /* Цвет цифры/точек */
+            color: var(--dot-color);
             font-weight: bold;
-            border-radius: 15%; /* Скругление граней */
-            box-sizing: border-box; /* Учитываем padding/border в размере */
-            
-            /* NEW: Для 3D все грани должны быть видны */
+            border-radius: 15%;
+            box-sizing: border-box;
+            /* In 3D mode, all faces must be visible */
             opacity: 1; 
             visibility: visible;
         }
         
-        /* 3D-позиционирование граней */
+        /* 3D face positioning */
         .face-1 { transform: rotateY(   0deg ) translateZ( 50% ); }
         .face-2 { transform: rotateX( 180deg ) translateZ( 50% ); }
         .face-3 { transform: rotateY(  90deg ) translateZ( 50% ); }
@@ -69,56 +71,59 @@
         .face-5 { transform: rotateX(  90deg ) translateZ( 50% ); }
         .face-6 { transform: rotateX( -90deg ) translateZ( 50% ); }
 
-        /* --- Стили для плоского кубика (flat) --- */
+        /* --- Specific styles for FLAT mode (2D) --- */
         .dice-container.flat {
-            box-shadow: none !important; /* NEW: Гарантированно убираем любые тени для плоского */
-            border: none; /* NEW: Убираем бордюр для плоского */
-            border-radius: 20%; /* NEW: Более мягкие углы для плоского */
-            background-color: var(--dice-color); /* NEW: Задаем фон контейнера для плоского */
-            display: flex; /* NEW: Сделаем flex контейнером для плоского */
+            perspective: none; /* No 3D perspective */
+            transform-style: flat; /* No 3D transform style */
+            transition: none; /* No 3D roll animation */
+            border: none; /* No border for the container */
+            border-radius: 20%; /* Softer corners for flat */
+            background-color: var(--dice-color); /* Container provides the background color */
+            display: flex; /* For centering the number */
             justify-content: center;
             align-items: center;
         }
         .dice-container.flat .face {
-            position: absolute; /* NEW: Все грани в плоском режиме находятся на одной позиции */
-            transform: none !important; /* NEW: Сброс 3D-трансформаций для всех граней в flat-режиме */
-            opacity: 0; /* NEW: Изначально все грани скрыты */
-            visibility: hidden; /* NEW: Скрываем неактивные грани */
-            transition: opacity 0.3s ease, visibility 0.3s ease; /* NEW: Плавный переход */
-            background-color: transparent; /* NEW: Цвет фона задается у родителя .dice-container.flat */
-            border: none; /* NEW: Убираем бордюр */
+            position: absolute; /* Stack faces on top of each other */
+            top: 0; left: 0;
+            transform: none !important; /* Override any 3D transforms */
+            background-color: transparent; /* Faces themselves are transparent in flat mode */
+            border: none; /* No border for faces in flat mode */
+            opacity: 0; /* All faces hidden by default in flat mode */
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
         }
         .dice-container.flat .face.active {
-            opacity: 1; /* NEW: Активная грань показана */
+            opacity: 1; /* Only the active face is visible */
             visibility: visible;
-            position: relative; /* NEW: Чтобы активная грань была в потоке */
-            width: 100%; height: 100%; /* NEW: Активная грань занимает весь размер */
+            position: relative; /* Active face takes up space */
+            width: 100%; height: 100%;
         }
-        /* --- Отображение чисел/точек в зависимости от стиля --- */
-        /* В 3D-стиле (по умолчанию) */
-        .dice-container:not(.flat) .face .number { display: none; } /* Числа скрыты */
-        .dice-container:not(.flat) .face .dot { display: block; } /* Точки видны */
+
+        /* --- Show/hide dots and numbers based on style --- */
+        /* For 3D dice (when .dice-container DOES NOT have .flat class) */
+        .dice-container:not(.flat) .face .number { display: none; } /* Hide numbers */
+        .dice-container:not(.flat) .face .dot { display: block; } /* Show dots */
         
-        /* В плоском (flat) стиле */
+        /* For Flat dice (when .dice-container HAS .flat class) */
         .dice-container.flat .face .number { 
-            display: block; /* Числа видны */
-            font-size: 8vw; /* NEW: Сделано крупнее, резиновое */
-            min-font-size: 40px; /* NEW: Минимальный размер */
+            display: block; /* Show numbers */
+            font-size: 8vw; /* Large and responsive */
+            min-font-size: 40px; /* Minimum size */
             line-height: 1;
         }
-        .dice-container.flat .face .dot { display: none; } /* Точки скрыты */
+        .dice-container.flat .face .dot { display: none; } /* Hide dots */
 
-
-        /* Точки для 3D */
+        /* Dots for 3D faces */
         .dot {
             position: absolute;
             width: 15%;
             height: 15%;
             background-color: var(--dot-color);
             border-radius: 50%;
-            box-shadow: inset 0 2px 3px rgba(0,0,0,0.5); /* NEW: Добавил тень точкам, чтобы они не выглядели плоскими */
+            box-shadow: inset 0 2px 3px rgba(0,0,0,0.5); /* Inner shadow for depth */
         }
-        /* Позиционирование точек для каждой грани */
+        /* Dot positioning */
         .dot-tl { top: 15%; left: 15%; }
         .dot-tr { top: 15%; right: 15%; }
         .dot-bl { bottom: 15%; left: 15%; }
@@ -127,14 +132,13 @@
         .dot-cl { top: 50%; left: 15%; transform: translateY(-50%); }
         .dot-cr { top: 50%; right: 15%; transform: translateY(-50%); }
         
-        /* Стили для маленьких кубиков - чтобы точки были меньше */
+        /* Responsive adjustments for dots (for smaller dice) */
         @media (max-width: 150px) {
              .dot { width: 18%; height: 18%; }
         }
          @media (max-width: 100px) {
              .dot { width: 20%; height: 20%; }
         }
-
     </style>
 </head>
 <body>
@@ -155,7 +159,6 @@
         let isRolling = false;
         let enableSound = false;
 
-        // Apply settings from URL parameters
         function applySettings() {
             const params = new URLSearchParams(window.location.search);
             const root = document.documentElement;
@@ -163,6 +166,7 @@
             root.style.setProperty('--dice-color', params.get('diceColor') || '#FF0000');
             root.style.setProperty('--dot-color', params.get('dotColor') || '#FFFFFF');
             
+            // Neon effect
             if (params.get('neon') === 'true') {
                 dice.classList.add('neon');
                 root.style.setProperty('--neon-color', params.get('neonColor') || '#00FFFF');
@@ -172,6 +176,7 @@
 
             enableSound = params.get('sound') === 'true';
 
+            // Style (flat or 3D)
             if (params.get('style') === 'flat') {
                 dice.classList.add('flat');
             } else {
@@ -237,10 +242,10 @@
 
         // Initial setup
         applySettings();
-        // Initial random roll
+        // Initial random roll with a slight delay
         setTimeout(() => {
             rollDice();
-        }, 50);
+        }, 50); 
     </script>
 </body>
 </html>
