@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Редактор игрового кубика</title>
+    <title>Редактор игрового инструмента</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Roboto+Mono&display=swap');
         body {
@@ -24,11 +24,13 @@
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
             border: 1px solid rgba(255, 255, 255, 0.1);
             overflow-y: auto;
+            position: relative; /* Для позиционирования копирайта */
         }
         .editor-panel {
             width: 40%;
             display: flex;
             flex-direction: column;
+            padding-bottom: 50px; /* Место для копирайта */
         }
         .preview-panel {
             width: 60%;
@@ -122,22 +124,45 @@
             margin-top: 5px;
             display: block;
         }
+        .copyright {
+            position: absolute;
+            bottom: 15px;
+            left: 25px;
+            right: 25px;
+            text-align: center;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.7);
+        }
     </style>
 </head>
 <body>
 
     <div class="editor-panel">
-        <h1>Редактор игрового кубика</h1>
+        <h1>Редактор игрового инструмента</h1>
         
-        <div class="form-group">
+        <div class="form-group" style="display: none;">
             <label for="publicUrl">Публичная ссылка на dice-roller.html</label>
-            <input type="url" id="publicUrl" placeholder="https://your-user.github.io/repo-name/dice-roller.html">
-            <small>Обязательно для вставки в Genially и Miro.</small>
+            <input type="url" id="publicUrl" value="https://alinapogudina-png.github.io/Dice_for_Miro_-ELT_workshop/dice-roller.html">
         </div>
 
-        <div class="form-group">
+        <div class="form-group checkbox-group">
+            <input type="checkbox" id="coinToggle">
+            <label for="coinToggle" style="margin-left: 10px; margin-bottom: 0;">Монетка (Орел/Решка)</label>
+        </div>
+
+        <div class="form-group checkbox-group">
+            <input type="checkbox" id="woodToggle">
+            <label for="woodToggle" style="margin-left: 10px; margin-bottom: 0;">Деревянный кубик</label>
+        </div>
+
+        <div class="form-group" id="diceColorGroup">
             <label for="diceColor">Цвет кубика</label>
             <input type="color" id="diceColor" value="#574FFF">
+        </div>
+
+        <div class="form-group" id="numberColorGroup">
+            <label for="numberColor">Цвет цифр</label>
+            <input type="color" id="numberColor" value="#FFFFFF">
         </div>
         
         <div class="form-group checkbox-group">
@@ -150,20 +175,12 @@
             <input type="checkbox" id="soundToggle" checked>
             <label for="soundToggle" style="margin-left: 10px; margin-bottom: 0;">Звук броска</label>
         </div>
-
-        <div class="form-group">
-            <label for="animationSpeed">Скорость анимации броска</label>
-            <select id="animationSpeed">
-                <option value="slow">Медленная</option>
-                <option value="normal" selected>Нормальная</option>
-                <option value="fast">Быстрая</option>
-            </select>
-        </div>
         
         <button id="generateBtn">Сгенерировать код</button>
         <textarea id="generated-code" readonly placeholder="Здесь появится ваш iframe код..."></textarea>
         <button id="copyBtn">Копировать код</button>
 
+        <p class="copyright">©ELT_workshop</p>
     </div>
 
     <div class="preview-panel">
@@ -174,47 +191,83 @@
     <script>
         const controls = {
             publicUrl: document.getElementById('publicUrl'),
+            coinToggle: document.getElementById('coinToggle'),
+            woodToggle: document.getElementById('woodToggle'),
             diceColor: document.getElementById('diceColor'),
+            numberColor: document.getElementById('numberColor'),
             neonToggle: document.getElementById('neonToggle'),
             neonColor: document.getElementById('neonColor'),
             soundToggle: document.getElementById('soundToggle'),
-            animationSpeed: document.getElementById('animationSpeed'),
+            // animationSpeed: document.getElementById('animationSpeed'), // Removed
             generateBtn: document.getElementById('generateBtn'),
             copyBtn: document.getElementById('copyBtn'),
             generatedCode: document.getElementById('generated-code'),
-            previewFrame: document.getElementById('previewFrame')
+            previewFrame: document.getElementById('previewFrame'),
+
+            diceColorGroup: document.getElementById('diceColorGroup'),
+            numberColorGroup: document.getElementById('numberColorGroup')
         };
 
         function updatePreview() {
             const params = new URLSearchParams();
             
-            params.append('diceColor', controls.diceColor.value);
+            const isCoin = controls.coinToggle.checked;
+            const isWood = controls.woodToggle.checked;
+
+            params.append('coin', isCoin);
+            params.append('wood', isWood && !isCoin); // Wood only if not coin
+
+            if (!isCoin && !isWood) {
+                params.append('diceColor', controls.diceColor.value);
+                params.append('numberColor', controls.numberColor.value);
+            } else if (isWood && !isCoin) {
+                // For wooden dice, colors are fixed, but we can pass them to ensure consistency
+                params.append('diceColor', '#a87e5b'); // Default wood color
+                params.append('numberColor', '#FFFFFF'); // Default white dots
+            }
+            // For coin, colors are handled by images
+
             params.append('neon', controls.neonToggle.checked);
             params.append('neonColor', controls.neonColor.value);
             params.append('sound', controls.soundToggle.checked);
-            params.append('speed', controls.animationSpeed.value);
-            // 'style' parameter is no longer needed as there's only one style (2D/flat)
-            params.append('style', 'flat'); // Always flat now
+            // params.append('speed', controls.animationSpeed.value); // Removed
 
-            const previewUrl = `dice-roller.html?${params.toString()}`;
+            const previewUrl = `${controls.publicUrl.value}?${params.toString()}`; // Use publicUrl directly
             if (controls.previewFrame.src !== previewUrl) {
                 controls.previewFrame.src = previewUrl;
             }
             return params.toString();
         }
+
+        function toggleInputStates() {
+            const isCoin = controls.coinToggle.checked;
+            const isWood = controls.woodToggle.checked;
+
+            // Disable/enable other options based on Coin
+            controls.woodToggle.disabled = isCoin;
+            controls.diceColor.disabled = isCoin || isWood;
+            controls.numberColor.disabled = isCoin || isWood;
+
+            // Show/hide color groups for cleaner UI
+            controls.diceColorGroup.style.display = (isCoin || isWood) ? 'none' : 'block';
+            controls.numberColorGroup.style.display = (isCoin || isWood) ? 'none' : 'block';
+
+            // Neon color input visibility
+            controls.neonColor.style.display = controls.neonToggle.checked ? 'inline-block' : 'none';
+
+            updatePreview();
+        }
         
         function generateCode() {
             const paramsString = updatePreview();
             const baseUrl = controls.publicUrl.value;
-
-            if (!baseUrl) {
-                alert('Пожалуйста, укажите "Публичную ссылку на dice-roller.html", чтобы сгенерировать код для Genially/Miro.');
-                controls.generatedCode.value = "Ошибка: не указана публичная ссылка на dice-roller.html";
-                return;
-            }
             
-            const diceUrl = `${baseUrl}?${paramsString}`;
-            const iframeCode = `<iframe src="${diceUrl}" width="200" height="200" frameborder="0" allowfullscreen="true" style="border-radius: 15px;"></iframe>`;
+            const toolUrl = `${baseUrl}?${paramsString}`;
+            const width = controls.coinToggle.checked ? '150' : '200'; // Coin can be a bit smaller
+            const height = controls.coinToggle.checked ? '150' : '200';
+            const borderRadius = controls.coinToggle.checked ? '50%' : '15px'; // Round for coin
+
+            const iframeCode = `<iframe src="${toolUrl}" width="${width}" height="${height}" frameborder="0" allowfullscreen="true" style="border-radius: ${borderRadius};"></iframe>`;
             controls.generatedCode.value = iframeCode;
         }
 
@@ -229,23 +282,19 @@
         // Event Listeners
         Object.values(controls).forEach(element => {
             if (element.tagName === 'INPUT' || element.tagName === 'SELECT') {
-                element.addEventListener('input', updatePreview);
+                element.addEventListener('input', toggleInputStates); // Use toggleInputStates for all inputs
             }
         });
         
-        controls.neonToggle.addEventListener('change', () => {
-             controls.neonColor.style.display = controls.neonToggle.checked ? 'inline-block' : 'none';
-             updatePreview();
-        });
-
-        // Initial setup for neon color input visibility
-        controls.neonColor.style.display = controls.neonToggle.checked ? 'inline-block' : 'none';
+        controls.neonToggle.addEventListener('change', toggleInputStates); // Also trigger on neon toggle
+        controls.coinToggle.addEventListener('change', toggleInputStates);
+        controls.woodToggle.addEventListener('change', toggleInputStates);
 
         controls.generateBtn.addEventListener('click', generateCode);
         controls.copyBtn.addEventListener('click', copyCode);
 
         // Initial load
-        updatePreview();
+        toggleInputStates(); // Call once to set initial states
     </script>
 </body>
 </html>
