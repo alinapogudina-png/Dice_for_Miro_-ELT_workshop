@@ -26,38 +26,37 @@
             overflow: hidden; 
         }
 
-        /* Main container for the tool (dice or coin) */
+        /* Main container for the tool. Ensures it's square. */
         .tool-container {
-            width: 80%; 
-            height: 80%;
-            max-width: 150px; /* Max size for the content itself */
-            max-height: 150px;
+            width: 80%; /* Takes 80% of iframe's width */
+            aspect-ratio: 1 / 1; /* FORCES a perfect square shape */
+            max-width: 150px; 
+            max-height: 150px; /* Limits overall size */
             position: relative;
             box-sizing: border-box; 
             display: flex; 
             justify-content: center;
             align-items: center;
-            /* Default border-radius */
+            /* Default border-radius, will be set by JS based on type */
             border-radius: 20%; 
-            /* Transition for filter property */
-            transition: filter 0.3s ease-out, background-color 0.3s ease-out, border-radius 0.3s ease-out;
-            filter: none; /* No glow by default */
+            background-color: transparent; /* Background for regular dice set inside .dice-style */
+            /* No filter here, it will be on the *content* */
+            transition: border-radius 0.3s ease-out; /* Smooth shape change */
         }
         
-        /* Neon effect using drop-shadow filter */
-        .tool-container.neon {
-            /* Using vw for responsive glow size, might need adjustment if iframe aspect ratio varies a lot */
-            filter: drop-shadow(0 0 0.8vw var(--neon-color)) 
-                    drop-shadow(0 0 1.5vw var(--neon-color)) 
-                    drop-shadow(0 0 2.5vw var(--neon-color));
-        }
-
         /* --- Regular Dice specific styles --- */
         .dice-style {
             background-color: var(--dice-background-color);
             width: 100%; height: 100%;
             border-radius: inherit; /* Inherit border-radius from tool-container */
             display: flex; justify-content: center; align-items: center;
+            transition: background-color 0.3s ease-out;
+            filter: none; /* No glow by default */
+        }
+        .dice-style.neon-glow {
+            filter: drop-shadow(0 0 0.8vw var(--neon-color)) 
+                    drop-shadow(0 0 1.5vw var(--neon-color)) 
+                    drop-shadow(0 0 2.5vw var(--neon-color));
         }
 
         .dice-number {
@@ -74,25 +73,37 @@
         /* --- Wooden Dice specific styles --- */
         .wood-style {
             width: 100%; height: 100%;
-            border-radius: inherit; /* Inherit border-radius from tool-container */
-            overflow: hidden; /* Ensure image stays within bounds */
+            border-radius: inherit; 
+            overflow: hidden; 
+            filter: none; /* No glow by default */
+        }
+        .wood-style.neon-glow {
+            filter: drop-shadow(0 0 0.8vw var(--neon-color)) 
+                    drop-shadow(0 0 1.5vw var(--neon-color)) 
+                    drop-shadow(0 0 2.5vw var(--neon-color));
         }
         .wood-style img {
             width: 100%; height: 100%;
-            object-fit: cover; /* Cover the area, may crop image slightly */
+            object-fit: cover; 
             display: block;
             animation: bounce 0.5s ease-out;
         }
 
         /* --- Coin specific styles --- */
         .coin-style {
-            border-radius: 50%; /* Round shape for coin */
+            border-radius: 50%; /* Always round */
             width: 100%; height: 100%;
-            overflow: hidden; /* Ensure image stays within bounds */
+            overflow: hidden; 
+            filter: none; /* No glow by default */
+        }
+        .coin-style.neon-glow {
+            filter: drop-shadow(0 0 0.8vw var(--neon-color)) 
+                    drop-shadow(0 0 1.5vw var(--neon-color)) 
+                    drop-shadow(0 0 2.5vw var(--neon-color));
         }
         .coin-style img {
             width: 100%; height: 100%;
-            object-fit: contain; /* Scale image to fit, maintain aspect ratio */
+            object-fit: contain; 
             display: block;
             animation: coinFlipAnim 0.3s ease-out;
         }
@@ -155,51 +166,67 @@
 
             const isCoin = params.get('coin') === 'true';
             const isWood = params.get('wood') === 'true';
-            
+            const enableNeon = params.get('neon') === 'true'; // Get neon setting
+
             // Clear existing content and classes
             toolContainer.innerHTML = '';
-            toolContainer.classList.remove('dice-style', 'wood-style', 'coin-style', 'neon');
-            toolContainer.style.backgroundColor = 'transparent'; // Reset background
-            toolContainer.style.borderRadius = isCoin ? '50%' : '20%'; // Set shape directly
+            toolContainer.classList.remove('dice-style', 'wood-style', 'coin-style');
+            
+            // Set border-radius for the tool-container based on type (ensures square is rounded correctly)
+            toolContainer.style.borderRadius = isCoin ? '50%' : '20%';
 
-            // Apply neon effect (filter)
-            if (params.get('neon') === 'true') {
-                toolContainer.classList.add('neon');
-                root.style.setProperty('--neon-color', params.get('neonColor') || '#00FFFF');
-            }
+            // Set neon color for root
+            root.style.setProperty('--neon-color', params.get('neonColor') || '#00FFFF');
 
             enableDiceSound = params.get('diceSound') === 'true';
             enableCoinSound = params.get('coinSound') === 'true';
 
+            let contentElement; // To hold the inner element (span or img)
+
             if (isCoin) {
-                // --- Coin setup ---
                 toolContainer.classList.add('coin-style');
                 const coinImage = document.createElement('img');
                 coinImage.id = 'coinImage';
                 coinImage.src = coinImages.heads;
                 coinImage.alt = 'Coin Heads';
                 toolContainer.appendChild(coinImage);
+                contentElement = coinImage; // Assign for neon
             } else if (isWood) {
-                // --- Wooden Dice setup ---
                 toolContainer.classList.add('wood-style');
                 const woodDiceImage = document.createElement('img');
                 woodDiceImage.id = 'woodDiceImage';
                 woodDiceImage.src = woodDiceImages[1];
                 woodDiceImage.alt = 'Wooden Dice Face 1';
                 toolContainer.appendChild(woodDiceImage);
+                contentElement = woodDiceImage; // Assign for neon
             } else {
-                // --- Regular Dice setup ---
                 toolContainer.classList.add('dice-style');
                 const diceNumberSpan = document.createElement('span');
                 diceNumberSpan.id = 'diceNumber';
                 diceNumberSpan.classList.add('dice-number');
                 diceNumberSpan.textContent = '1';
                 toolContainer.appendChild(diceNumberSpan);
+                contentElement = diceNumberSpan; // Assign for neon
 
                 root.style.setProperty('--dice-background-color', params.get('diceColor') || '#574FFF');
                 root.style.setProperty('--number-color', params.get('numberColor') || '#FFFFFF');
             }
+
+            // Apply neon-glow class directly to the content element if enabled
+            if (enableNeon && contentElement) {
+                // Apply neon class to toolContainer for generic transitions if needed
+                // But the actual glow filter is on the contentElement
+                toolContainer.classList.add('neon'); 
+                // For dice-style, apply neon-glow to the style container itself
+                // For wood and coin, apply to the image
+                if (toolContainer.classList.contains('dice-style')) {
+                    toolContainer.classList.add('neon-glow');
+                } else {
+                    contentElement.classList.add('neon-glow');
+                }
+            }
         }
+
 
         function rollTool() {
             if (isRolling) return;
