@@ -172,8 +172,8 @@
         </div>
 
         <div class="form-group" id="soundToggleGroup">
-            <input type="checkbox" id="soundToggle" checked>
-            <label for="soundToggle" style="margin-left: 10px; margin-bottom: 0;">Звук броска кубика</label>
+            <input type="checkbox" id="diceSoundToggle" checked>
+            <label for="diceSoundToggle" style="margin-left: 10px; margin-bottom: 0;">Звук броска кубика</label>
         </div>
 
         <div class="form-group" id="coinSoundToggleGroup" style="display: none;">
@@ -202,8 +202,8 @@
             numberColor: document.getElementById('numberColor'),
             neonToggle: document.getElementById('neonToggle'),
             neonColor: document.getElementById('neonColor'),
-            soundToggle: document.getElementById('soundToggle'),
-            coinSoundToggle: document.getElementById('coinSoundToggle'), // NEW: Coin sound toggle
+            diceSoundToggle: document.getElementById('diceSoundToggle'), // Renamed
+            coinSoundToggle: document.getElementById('coinSoundToggle'), 
             generateBtn: document.getElementById('generateBtn'),
             copyBtn: document.getElementById('copyBtn'),
             generatedCode: document.getElementById('generated-code'),
@@ -212,7 +212,7 @@
             diceColorGroup: document.getElementById('diceColorGroup'),
             numberColorGroup: document.getElementById('numberColorGroup'),
             soundToggleGroup: document.getElementById('soundToggleGroup'),
-            coinSoundToggleGroup: document.getElementById('coinSoundToggleGroup') // NEW: Coin sound toggle group
+            coinSoundToggleGroup: document.getElementById('coinSoundToggleGroup')
         };
 
         function updatePreview() {
@@ -231,12 +231,11 @@
                 params.append('diceColor', '#a87e5b'); 
                 params.append('numberColor', '#FFFFFF'); 
             }
-            // For coin, colors are handled by images
 
             params.append('neon', controls.neonToggle.checked);
             params.append('neonColor', controls.neonColor.value);
-            params.append('diceSound', controls.soundToggle.checked); // Renamed to diceSound
-            params.append('coinSound', controls.coinSoundToggle.checked); // NEW: Coin sound parameter
+            params.append('diceSound', controls.diceSoundToggle.checked); 
+            params.append('coinSound', controls.coinSoundToggle.checked); 
 
             const previewUrl = `${controls.publicUrl.value}?${params.toString()}`;
             if (controls.previewFrame.src !== previewUrl) {
@@ -251,16 +250,13 @@
 
             controls.woodToggle.disabled = isCoin;
             
-            // Show/hide color pickers for dice
             const showColorPickers = !isCoin && !isWood;
             controls.diceColorGroup.style.display = showColorPickers ? 'block' : 'none';
             controls.numberColorGroup.style.display = showColorPickers ? 'block' : 'none';
             
-            // Show/hide dice sound / coin sound
             controls.soundToggleGroup.style.display = isCoin ? 'none' : 'block';
             controls.coinSoundToggleGroup.style.display = isCoin ? 'block' : 'none';
 
-            // Neon color input visibility
             controls.neonColor.style.display = controls.neonToggle.checked ? 'inline-block' : 'none';
 
             updatePreview();
@@ -271,11 +267,10 @@
             const baseUrl = controls.publicUrl.value;
             
             const toolUrl = `${baseUrl}?${paramsString}`;
-            const width = controls.coinToggle.checked ? '150' : '200';
+            const width = controls.coinToggle.checked ? '150' : '200'; 
             const height = controls.coinToggle.checked ? '150' : '200';
-            const borderRadius = controls.coinToggle.checked ? '50%' : '15px'; // Round for coin
-
-            const iframeCode = `<iframe src="${toolUrl}" width="${width}" height="${height}" frameborder="0" allowfullscreen="true" style="border-radius: ${borderRadius};"></iframe>`;
+            // iframe border-radius will now always be 15px, tool itself will manage its shape
+            const iframeCode = `<iframe src="${toolUrl}" width="${width}" height="${height}" frameborder="0" allowfullscreen="true" style="border-radius: 15px;"></iframe>`; 
             controls.generatedCode.value = iframeCode;
         }
 
@@ -297,7 +292,8 @@
         controls.neonToggle.addEventListener('change', toggleInputStates);
         controls.coinToggle.addEventListener('change', toggleInputStates);
         controls.woodToggle.addEventListener('change', toggleInputStates);
-        controls.coinSoundToggle.addEventListener('change', updatePreview); // NEW: Update preview on coin sound toggle
+        controls.diceSoundToggle.addEventListener('change', updatePreview); // NEW: Corrected name
+        controls.coinSoundToggle.addEventListener('change', updatePreview); 
 
         controls.generateBtn.addEventListener('click', generateCode);
         controls.copyBtn.addEventListener('click', copyCode);
