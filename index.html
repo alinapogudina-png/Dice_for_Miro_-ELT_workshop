@@ -137,12 +137,7 @@
 
         <div class="form-group">
             <label for="diceColor">Цвет кубика</label>
-            <input type="color" id="diceColor" value="#FF0000">
-        </div>
-
-        <div class="form-group">
-            <label for="dotColor">Цвет точек</label>
-            <input type="color" id="dotColor" value="#FFFFFF">
+            <input type="color" id="diceColor" value="#574FFF">
         </div>
         
         <div class="form-group checkbox-group">
@@ -154,14 +149,6 @@
         <div class="form-group">
             <input type="checkbox" id="soundToggle" checked>
             <label for="soundToggle" style="margin-left: 10px; margin-bottom: 0;">Звук броска</label>
-        </div>
-
-        <div class="form-group">
-            <label for="diceStyle">Стиль кубика</label>
-            <select id="diceStyle">
-                <option value="classic" selected>Классический (3D)</option>
-                <option value="flat">Плоский (2D)</option>
-            </select>
         </div>
 
         <div class="form-group">
@@ -188,11 +175,9 @@
         const controls = {
             publicUrl: document.getElementById('publicUrl'),
             diceColor: document.getElementById('diceColor'),
-            dotColor: document.getElementById('dotColor'),
             neonToggle: document.getElementById('neonToggle'),
             neonColor: document.getElementById('neonColor'),
-            soundToggle: document.getElementById('soundToggle'), // NEW
-            diceStyle: document.getElementById('diceStyle'),
+            soundToggle: document.getElementById('soundToggle'),
             animationSpeed: document.getElementById('animationSpeed'),
             generateBtn: document.getElementById('generateBtn'),
             copyBtn: document.getElementById('copyBtn'),
@@ -204,12 +189,12 @@
             const params = new URLSearchParams();
             
             params.append('diceColor', controls.diceColor.value);
-            params.append('dotColor', controls.dotColor.value);
             params.append('neon', controls.neonToggle.checked);
             params.append('neonColor', controls.neonColor.value);
-            params.append('sound', controls.soundToggle.checked); // NEW
-            params.append('style', controls.diceStyle.value);
+            params.append('sound', controls.soundToggle.checked);
             params.append('speed', controls.animationSpeed.value);
+            // 'style' parameter is no longer needed as there's only one style (2D/flat)
+            params.append('style', 'flat'); // Always flat now
 
             const previewUrl = `dice-roller.html?${params.toString()}`;
             if (controls.previewFrame.src !== previewUrl) {
@@ -263,5 +248,4 @@
         updatePreview();
     </script>
 </body>
-
 </html>
