@@ -26,7 +26,7 @@
             overflow: hidden; 
         }
 
-        /* Main container for the tool. Ensures it's square. */
+        /* Main container for the tool. Ensures it's square and controls outer shape. */
         .tool-container {
             width: 80%; /* Takes 80% of iframe's width */
             aspect-ratio: 1 / 1; /* FORCES a perfect square shape */
@@ -37,23 +37,20 @@
             display: flex; 
             justify-content: center;
             align-items: center;
-            /* Default border-radius, will be set by JS based on type */
-            border-radius: 20%; 
-            background-color: transparent; /* Background for regular dice set inside .dice-style */
-            /* No filter here, it will be on the *content* */
-            transition: border-radius 0.3s ease-out; /* Smooth shape change */
+            /* Border-radius will be set by JS dynamically */
+            transition: border-radius 0.3s ease-out, background-color 0.3s ease-out;
+            /* No filter: drop-shadow here */
         }
         
         /* --- Regular Dice specific styles --- */
-        .dice-style {
-            background-color: var(--dice-background-color);
+        .dice-style-wrapper { /* New wrapper for regular dice background */
             width: 100%; height: 100%;
-            border-radius: inherit; /* Inherit border-radius from tool-container */
+            border-radius: inherit; /* Inherit from tool-container */
+            background-color: var(--dice-background-color);
             display: flex; justify-content: center; align-items: center;
             transition: background-color 0.3s ease-out;
-            filter: none; /* No glow by default */
         }
-        .dice-style.neon-glow {
+        .dice-style-wrapper .dice-number.neon-glow {
             filter: drop-shadow(0 0 0.8vw var(--neon-color)) 
                     drop-shadow(0 0 1.5vw var(--neon-color)) 
                     drop-shadow(0 0 2.5vw var(--neon-color));
@@ -67,45 +64,38 @@
             line-height: 1; 
             display: block; 
             animation: bounce 0.5s ease-out;
-            transition: color 0.3s ease-out;
+            transition: color 0.3s ease-out, filter 0.3s ease-out; /* Add filter transition */
+            filter: none; /* No glow by default */
         }
 
         /* --- Wooden Dice specific styles --- */
-        .wood-style {
-            width: 100%; height: 100%;
-            border-radius: inherit; 
-            overflow: hidden; 
-            filter: none; /* No glow by default */
-        }
-        .wood-style.neon-glow {
-            filter: drop-shadow(0 0 0.8vw var(--neon-color)) 
-                    drop-shadow(0 0 1.5vw var(--neon-color)) 
-                    drop-shadow(0 0 2.5vw var(--neon-color));
-        }
         .wood-style img {
             width: 100%; height: 100%;
             object-fit: cover; 
             display: block;
             animation: bounce 0.5s ease-out;
-        }
-
-        /* --- Coin specific styles --- */
-        .coin-style {
-            border-radius: 50%; /* Always round */
-            width: 100%; height: 100%;
-            overflow: hidden; 
+            transition: filter 0.3s ease-out; /* Add filter transition */
             filter: none; /* No glow by default */
         }
-        .coin-style.neon-glow {
+        .wood-style img.neon-glow {
             filter: drop-shadow(0 0 0.8vw var(--neon-color)) 
                     drop-shadow(0 0 1.5vw var(--neon-color)) 
                     drop-shadow(0 0 2.5vw var(--neon-color));
         }
+
+        /* --- Coin specific styles --- */
         .coin-style img {
             width: 100%; height: 100%;
             object-fit: contain; 
             display: block;
             animation: coinFlipAnim 0.3s ease-out;
+            transition: filter 0.3s ease-out; /* Add filter transition */
+            filter: none; /* No glow by default */
+        }
+        .coin-style img.neon-glow {
+            filter: drop-shadow(0 0 0.8vw var(--neon-color)) 
+                    drop-shadow(0 0 1.5vw var(--neon-color)) 
+                    drop-shadow(0 0 2.5vw var(--neon-color));
         }
 
         @keyframes bounce {
@@ -166,13 +156,13 @@
 
             const isCoin = params.get('coin') === 'true';
             const isWood = params.get('wood') === 'true';
-            const enableNeon = params.get('neon') === 'true'; // Get neon setting
+            const enableNeon = params.get('neon') === 'true'; 
 
             // Clear existing content and classes
             toolContainer.innerHTML = '';
-            toolContainer.classList.remove('dice-style', 'wood-style', 'coin-style');
+            toolContainer.classList.remove('neon-glow'); // Ensure main container's glow is cleared
             
-            // Set border-radius for the tool-container based on type (ensures square is rounded correctly)
+            // Set border-radius for the tool-container based on type (for outer shape)
             toolContainer.style.borderRadius = isCoin ? '50%' : '20%';
 
             // Set neon color for root
@@ -181,49 +171,48 @@
             enableDiceSound = params.get('diceSound') === 'true';
             enableCoinSound = params.get('coinSound') === 'true';
 
-            let contentElement; // To hold the inner element (span or img)
+            let contentVisualElement; // This will be the element that actually gets the neon glow
 
             if (isCoin) {
-                toolContainer.classList.add('coin-style');
+                // For coin, the glow is on the img itself
                 const coinImage = document.createElement('img');
                 coinImage.id = 'coinImage';
+                coinImage.className = 'coin-style'; // Apply style to img directly
                 coinImage.src = coinImages.heads;
                 coinImage.alt = 'Coin Heads';
                 toolContainer.appendChild(coinImage);
-                contentElement = coinImage; // Assign for neon
+                contentVisualElement = coinImage;
             } else if (isWood) {
-                toolContainer.classList.add('wood-style');
+                // For wooden dice, the glow is on the img itself
                 const woodDiceImage = document.createElement('img');
                 woodDiceImage.id = 'woodDiceImage';
+                woodDiceImage.className = 'wood-style'; // Apply style to img directly
                 woodDiceImage.src = woodDiceImages[1];
                 woodDiceImage.alt = 'Wooden Dice Face 1';
                 toolContainer.appendChild(woodDiceImage);
-                contentElement = woodDiceImage; // Assign for neon
+                contentVisualElement = woodDiceImage;
             } else {
-                toolContainer.classList.add('dice-style');
+                // For regular dice, the glow is on the span (number)
+                const diceStyleWrapper = document.createElement('div'); // New wrapper for background
+                diceStyleWrapper.className = 'dice-style-wrapper';
+                toolContainer.appendChild(diceStyleWrapper);
+
                 const diceNumberSpan = document.createElement('span');
                 diceNumberSpan.id = 'diceNumber';
-                diceNumberSpan.classList.add('dice-number');
+                diceNumberSpan.className = 'dice-number';
                 diceNumberSpan.textContent = '1';
-                toolContainer.appendChild(diceNumberSpan);
-                contentElement = diceNumberSpan; // Assign for neon
+                diceStyleWrapper.appendChild(diceNumberSpan); // Append number to wrapper
 
-                root.style.setProperty('--dice-background-color', params.get('diceColor') || '#574FFF');
+                contentVisualElement = diceNumberSpan; // The number gets the glow
+
+                // Set background color for the wrapper
+                diceStyleWrapper.style.backgroundColor = params.get('diceColor') || '#574FFF';
                 root.style.setProperty('--number-color', params.get('numberColor') || '#FFFFFF');
             }
 
-            // Apply neon-glow class directly to the content element if enabled
-            if (enableNeon && contentElement) {
-                // Apply neon class to toolContainer for generic transitions if needed
-                // But the actual glow filter is on the contentElement
-                toolContainer.classList.add('neon'); 
-                // For dice-style, apply neon-glow to the style container itself
-                // For wood and coin, apply to the image
-                if (toolContainer.classList.contains('dice-style')) {
-                    toolContainer.classList.add('neon-glow');
-                } else {
-                    contentElement.classList.add('neon-glow');
-                }
+            // Apply neon-glow class to the identified contentVisualElement
+            if (enableNeon && contentVisualElement) {
+                 contentVisualElement.classList.add('neon-glow');
             }
         }
 
@@ -232,7 +221,7 @@
             if (isRolling) return;
             isRolling = true;
 
-            const isCoinMode = toolContainer.classList.contains('coin-style');
+            const isCoinMode = toolContainer.querySelector('.coin-style') !== null; // Check if coin img exists
 
             if (isCoinMode && enableCoinSound) {
                 coinSoundEffect.currentTime = 0;
@@ -243,7 +232,7 @@
             }
 
             if (isCoinMode) {
-                const coinImage = document.getElementById('coinImage');
+                const coinImage = toolContainer.querySelector('.coin-style'); // Select img with coin-style
                 const randomSide = Math.random() < 0.5 ? 'heads' : 'tails';
                 
                 coinImage.style.animation = 'none';
@@ -255,8 +244,8 @@
                 setTimeout(() => {
                     isRolling = false;
                 }, 300);
-            } else if (toolContainer.classList.contains('wood-style')) {
-                const woodDiceImage = document.getElementById('woodDiceImage');
+            } else if (toolContainer.querySelector('.wood-style') !== null) { // Check if wood img exists
+                const woodDiceImage = toolContainer.querySelector('.wood-style'); // Select img with wood-style
                 const randomValue = Math.floor(Math.random() * 6) + 1;
                 
                 woodDiceImage.style.animation = 'none';
