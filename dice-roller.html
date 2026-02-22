@@ -23,6 +23,10 @@
             justify-content: center;
             align-items: center;
             cursor: pointer;
+            -webkit-user-select: none; /* Запрет выделения текста */
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
 
         .dice-container {
@@ -31,25 +35,27 @@
             max-width: 150px; /* Максимальный размер кубика */
             max-height: 150px;
             position: relative;
-            /* Default for 3D cube */
-            perspective: 500px;
-            transform-style: preserve-3d;
-            transition: transform var(--animation-duration) ease-out; /* Animation for 3D roll */
-            border-radius: 15%; /* Скругленные грани */
-            /* No default box-shadow, only neon if applied */
-            box-shadow: none; 
+            /* Общие стили для контейнера */
+            border-radius: 15%; 
+            box-sizing: border-box; /* Учитываем padding/border в размере */
+            box-shadow: none; /* Нет тени по умолчанию */
         }
-
-        /* Neon effect applies to the main container for both 3D and Flat */
+        /* Неоновая подсветка применяется к самому контейнеру */
         .dice-container.neon {
             box-shadow: 0 0 10px var(--neon-color), 0 0 25px var(--neon-color), 0 0 50px var(--neon-color);
         }
 
-        .face {
+        /* --- Стили для 3D-кубика --- */
+        .dice-container.style-3d {
+            perspective: 500px; /* Для 3D-эффекта */
+            transform-style: preserve-3d;
+            transition: transform var(--animation-duration) ease-out; /* Анимация броска */
+        }
+        .dice-container.style-3d .face {
             position: absolute;
             width: 100%;
             height: 100%;
-            background-color: var(--dice-color); /* Цвет грани */
+            background-color: var(--dice-color);
             border: 1px solid rgba(0, 0, 0, 0.2);
             display: flex;
             justify-content: center;
@@ -58,63 +64,63 @@
             font-weight: bold;
             border-radius: 15%;
             box-sizing: border-box;
-            /* In 3D mode, all faces must be visible */
+            /* 3D faces are always visible */
             opacity: 1; 
             visibility: visible;
         }
-        
         /* 3D face positioning */
-        .face-1 { transform: rotateY(   0deg ) translateZ( 50% ); }
-        .face-2 { transform: rotateX( 180deg ) translateZ( 50% ); }
-        .face-3 { transform: rotateY(  90deg ) translateZ( 50% ); }
-        .face-4 { transform: rotateY( -90deg ) translateZ( 50% ); }
-        .face-5 { transform: rotateX(  90deg ) translateZ( 50% ); }
-        .face-6 { transform: rotateX( -90deg ) translateZ( 50% ); }
+        .dice-container.style-3d .face-1 { transform: rotateY(   0deg ) translateZ( 50% ); }
+        .dice-container.style-3d .face-2 { transform: rotateX( 180deg ) translateZ( 50% ); }
+        .dice-container.style-3d .face-3 { transform: rotateY(  90deg ) translateZ( 50% ); }
+        .dice-container.style-3d .face-4 { transform: rotateY( -90deg ) translateZ( 50% ); }
+        .dice-container.style-3d .face-5 { transform: rotateX(  90deg ) translateZ( 50% ); }
+        .dice-container.style-3d .face-6 { transform: rotateX( -90deg ) translateZ( 50% ); }
 
-        /* --- Specific styles for FLAT mode (2D) --- */
-        .dice-container.flat {
-            perspective: none; /* No 3D perspective */
-            transform-style: flat; /* No 3D transform style */
-            transition: none; /* No 3D roll animation */
-            border: none; /* No border for the container */
+        /* Hide numbers, show dots in 3D */
+        .dice-container.style-3d .face .number { display: none; }
+        .dice-container.style-3d .face .dot { display: block; }
+
+
+        /* --- Стили для 2D-кубика (flat) --- */
+        .dice-container.style-2d {
+            /* No 3D perspective/transforms for 2D */
+            perspective: none;
+            transform-style: flat;
+            transition: none;
+            border: none;
             border-radius: 20%; /* Softer corners for flat */
             background-color: var(--dice-color); /* Container provides the background color */
             display: flex; /* For centering the number */
             justify-content: center;
             align-items: center;
         }
-        .dice-container.flat .face {
-            position: absolute; /* Stack faces on top of each other */
+        .dice-container.style-2d .face {
+            /* All faces are hidden in 2D mode, only the active one is shown */
+            position: absolute;
             top: 0; left: 0;
             transform: none !important; /* Override any 3D transforms */
             background-color: transparent; /* Faces themselves are transparent in flat mode */
-            border: none; /* No border for faces in flat mode */
-            opacity: 0; /* All faces hidden by default in flat mode */
+            border: none;
+            opacity: 0; 
             visibility: hidden;
             transition: opacity 0.3s ease, visibility 0.3s ease;
         }
-        .dice-container.flat .face.active {
+        .dice-container.style-2d .face.active {
             opacity: 1; /* Only the active face is visible */
             visibility: visible;
             position: relative; /* Active face takes up space */
             width: 100%; height: 100%;
         }
-
-        /* --- Show/hide dots and numbers based on style --- */
-        /* For 3D dice (when .dice-container DOES NOT have .flat class) */
-        .dice-container:not(.flat) .face .number { display: none; } /* Hide numbers */
-        .dice-container:not(.flat) .face .dot { display: block; } /* Show dots */
-        
-        /* For Flat dice (when .dice-container HAS .flat class) */
-        .dice-container.flat .face .number { 
-            display: block; /* Show numbers */
+        /* Show numbers, hide dots in 2D */
+        .dice-container.style-2d .face .number { 
+            display: block;
             font-size: 8vw; /* Large and responsive */
             min-font-size: 40px; /* Minimum size */
             line-height: 1;
         }
-        .dice-container.flat .face .dot { display: none; } /* Hide dots */
+        .dice-container.style-2d .face .dot { display: none; }
 
-        /* Dots for 3D faces */
+        /* --- Dots styles (for 3D mode) --- */
         .dot {
             position: absolute;
             width: 15%;
@@ -158,6 +164,7 @@
         const diceSound = document.getElementById('diceSound');
         let isRolling = false;
         let enableSound = false;
+        let currentStyle = '3d'; // '3d' or '2d'
 
         function applySettings() {
             const params = new URLSearchParams(window.location.search);
@@ -166,7 +173,7 @@
             root.style.setProperty('--dice-color', params.get('diceColor') || '#FF0000');
             root.style.setProperty('--dot-color', params.get('dotColor') || '#FFFFFF');
             
-            // Neon effect
+            // Apply neon effect
             if (params.get('neon') === 'true') {
                 dice.classList.add('neon');
                 root.style.setProperty('--neon-color', params.get('neonColor') || '#00FFFF');
@@ -176,12 +183,10 @@
 
             enableSound = params.get('sound') === 'true';
 
-            // Style (flat or 3D)
-            if (params.get('style') === 'flat') {
-                dice.classList.add('flat');
-            } else {
-                dice.classList.remove('flat');
-            }
+            // Apply style (flat or 3d)
+            currentStyle = (params.get('style') === 'flat') ? '2d' : '3d';
+            dice.classList.remove('style-3d', 'style-2d'); // Clear previous style
+            dice.classList.add('style-' + currentStyle); // Add current style class
 
             let duration = '0.8s'; // normal
             switch (params.get('speed')) {
@@ -203,8 +208,8 @@
 
             const randomValue = Math.floor(Math.random() * 6) + 1; // 1 to 6
 
-            if (dice.classList.contains('flat')) {
-                // Flat style: just show the number
+            if (currentStyle === '2d') {
+                // 2D style: just show the number
                 document.querySelectorAll('.face').forEach(face => face.classList.remove('active'));
                 const activeFace = document.querySelector(`.face-${randomValue}`);
                 if (activeFace) {
