@@ -198,7 +198,6 @@
             neonToggle: document.getElementById('neonToggle'),
             neonColor: document.getElementById('neonColor'),
             soundToggle: document.getElementById('soundToggle'),
-            // animationSpeed: document.getElementById('animationSpeed'), // Removed
             generateBtn: document.getElementById('generateBtn'),
             copyBtn: document.getElementById('copyBtn'),
             generatedCode: document.getElementById('generated-code'),
@@ -221,18 +220,18 @@
                 params.append('diceColor', controls.diceColor.value);
                 params.append('numberColor', controls.numberColor.value);
             } else if (isWood && !isCoin) {
-                // For wooden dice, colors are fixed, but we can pass them to ensure consistency
-                params.append('diceColor', '#a87e5b'); // Default wood color
-                params.append('numberColor', '#FFFFFF'); // Default white dots
+                // For wooden dice, colors are fixed, but we pass them to ensure consistency
+                // (Though dice-roller will use image colors)
+                params.append('diceColor', '#a87e5b'); 
+                params.append('numberColor', '#FFFFFF'); 
             }
             // For coin, colors are handled by images
 
             params.append('neon', controls.neonToggle.checked);
             params.append('neonColor', controls.neonColor.value);
             params.append('sound', controls.soundToggle.checked);
-            // params.append('speed', controls.animationSpeed.value); // Removed
 
-            const previewUrl = `${controls.publicUrl.value}?${params.toString()}`; // Use publicUrl directly
+            const previewUrl = `${controls.publicUrl.value}?${params.toString()}`;
             if (controls.previewFrame.src !== previewUrl) {
                 controls.previewFrame.src = previewUrl;
             }
@@ -243,15 +242,14 @@
             const isCoin = controls.coinToggle.checked;
             const isWood = controls.woodToggle.checked;
 
-            // Disable/enable other options based on Coin
+            // Disable/enable other options based on Coin/Wood
             controls.woodToggle.disabled = isCoin;
-            controls.diceColor.disabled = isCoin || isWood;
-            controls.numberColor.disabled = isCoin || isWood;
-
-            // Show/hide color groups for cleaner UI
-            controls.diceColorGroup.style.display = (isCoin || isWood) ? 'none' : 'block';
-            controls.numberColorGroup.style.display = (isCoin || isWood) ? 'none' : 'block';
-
+            
+            // Show/hide color groups
+            const showColorPickers = !isCoin && !isWood;
+            controls.diceColorGroup.style.display = showColorPickers ? 'block' : 'none';
+            controls.numberColorGroup.style.display = showColorPickers ? 'block' : 'none';
+            
             // Neon color input visibility
             controls.neonColor.style.display = controls.neonToggle.checked ? 'inline-block' : 'none';
 
@@ -282,11 +280,11 @@
         // Event Listeners
         Object.values(controls).forEach(element => {
             if (element.tagName === 'INPUT' || element.tagName === 'SELECT') {
-                element.addEventListener('input', toggleInputStates); // Use toggleInputStates for all inputs
+                element.addEventListener('input', toggleInputStates);
             }
         });
         
-        controls.neonToggle.addEventListener('change', toggleInputStates); // Also trigger on neon toggle
+        controls.neonToggle.addEventListener('change', toggleInputStates);
         controls.coinToggle.addEventListener('change', toggleInputStates);
         controls.woodToggle.addEventListener('change', toggleInputStates);
 
@@ -294,7 +292,7 @@
         controls.copyBtn.addEventListener('click', copyCode);
 
         // Initial load
-        toggleInputStates(); // Call once to set initial states
+        toggleInputStates();
     </script>
 </body>
 </html>
