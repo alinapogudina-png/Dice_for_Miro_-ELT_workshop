@@ -269,7 +269,8 @@
             const toolUrl = `${baseUrl}?${paramsString}`;
             const width = controls.coinToggle.checked ? '150' : '200'; 
             const height = controls.coinToggle.checked ? '150' : '200';
-            const iframeCode = `<iframe src="${toolUrl}" width="${width}" height="${height}" frameborder="0" allowfullscreen="true" style="border-radius: 15px;"></iframe>`; 
+            // NEW: Added allowtransparency="true" and set background-color: transparent on style
+            const iframeCode = `<iframe src="${toolUrl}" width="${width}" height="${height}" frameborder="0" allowfullscreen="true" allowtransparency="true" style="border-radius: 15px; background-color: transparent;"></iframe>`; 
             controls.generatedCode.value = iframeCode;
         }
 
