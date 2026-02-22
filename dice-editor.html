@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Редактор игрового кубика</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Roboto+Mono&display=swap');
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #1a1a2e;
+            color: #e0e0e0;
+            display: flex;
+            padding: 20px;
+            gap: 30px;
+            height: 100vh;
+            margin: 0;
+            box-sizing: border-box;
+        }
+        .editor-panel, .preview-panel {
+            background-color: #16213e;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow-y: auto;
+        }
+        .editor-panel {
+            width: 40%;
+            display: flex;
+            flex-direction: column;
+        }
+        .preview-panel {
+            width: 60%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        h1, h2 {
+            color: #00c6ff;
+            text-shadow: 0 0 5px #00c6ff;
+            margin-top: 0;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        input[type="url"], input[type="text"], select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #535c91;
+            background-color: #0f3460;
+            color: #e0e0e0;
+            box-sizing: border-box;
+        }
+        input[type="color"] {
+            padding: 0;
+            border: none;
+            width: 50px;
+            height: 30px;
+            vertical-align: middle;
+            margin-left: 10px;
+            border-radius: 5px;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+        #previewFrame {
+            width: 100%;
+            height: 100%;
+            min-width: 200px;
+            min-height: 200px;
+            border: 1px solid #535c91;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        button {
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 198, 255, 0.4);
+        }
+        #generated-code {
+            width: 100%;
+            height: 100px;
+            margin-top: 15px;
+            font-family: 'Roboto Mono', monospace;
+            background-color: #0f3460;
+            color: #a7d129;
+            border: 1px solid #535c91;
+            border-radius: 8px;
+            padding: 10px;
+            resize: vertical;
+        }
+        #copyBtn {
+            margin-top: 10px;
+            background: #e94560;
+        }
+        #copyBtn:hover {
+             box-shadow: 0 4px 15px rgba(233, 69, 96, 0.4);
+        }
+        small {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 5px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="editor-panel">
+        <h1>Редактор игрового кубика</h1>
+        
+        <div class="form-group">
+            <label for="publicUrl">Публичная ссылка на dice-roller.html</label>
+            <input type="url" id="publicUrl" placeholder="https://your-user.github.io/repo-name/dice-roller.html">
+            <small>Обязательно для вставки в Genially и Miro.</small>
+        </div>
+
+        <div class="form-group">
+            <label for="diceColor">Цвет кубика</label>
+            <input type="color" id="diceColor" value="#FF0000">
+        </div>
+
+        <div class="form-group">
+            <label for="dotColor">Цвет точек</label>
+            <input type="color" id="dotColor" value="#FFFFFF">
+        </div>
+        
+        <div class="form-group checkbox-group">
+            <input type="checkbox" id="neonToggle" checked>
+            <label for="neonToggle" style="margin-left: 10px; margin-bottom: 0;">Неоновая подсветка</label>
+            <input type="color" id="neonColor" value="#00FFFF">
+        </div>
+
+        <div class="form-group">
+            <input type="checkbox" id="soundToggle" checked>
+            <label for="soundToggle" style="margin-left: 10px; margin-bottom: 0;">Звук броска</label>
+        </div>
+
+        <div class="form-group">
+            <label for="diceStyle">Стиль кубика</label>
+            <select id="diceStyle">
+                <option value="classic" selected>Классический (3D)</option>
+                <option value="flat">Плоский (2D)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="animationSpeed">Скорость анимации броска</label>
+            <select id="animationSpeed">
+                <option value="slow">Медленная</option>
+                <option value="normal" selected>Нормальная</option>
+                <option value="fast">Быстрая</option>
+            </select>
+        </div>
+        
+        <button id="generateBtn">Сгенерировать код</button>
+        <textarea id="generated-code" readonly placeholder="Здесь появится ваш iframe код..."></textarea>
+        <button id="copyBtn">Копировать код</button>
+
+    </div>
+
+    <div class="preview-panel">
+        <h2>Предпросмотр</h2>
+        <iframe id="previewFrame" src="" frameborder="0"></iframe>
+    </div>
+
+    <script>
+        const controls = {
+            publicUrl: document.getElementById('publicUrl'),
+            diceColor: document.getElementById('diceColor'),
+            dotColor: document.getElementById('dotColor'),
+            neonToggle: document.getElementById('neonToggle'),
+            neonColor: document.getElementById('neonColor'),
+            soundToggle: document.getElementById('soundToggle'), // NEW
+            diceStyle: document.getElementById('diceStyle'),
+            animationSpeed: document.getElementById('animationSpeed'),
+            generateBtn: document.getElementById('generateBtn'),
+            copyBtn: document.getElementById('copyBtn'),
+            generatedCode: document.getElementById('generated-code'),
+            previewFrame: document.getElementById('previewFrame')
+        };
+
+        function updatePreview() {
+            const params = new URLSearchParams();
+            
+            params.append('diceColor', controls.diceColor.value);
+            params.append('dotColor', controls.dotColor.value);
+            params.append('neon', controls.neonToggle.checked);
+            params.append('neonColor', controls.neonColor.value);
+            params.append('sound', controls.soundToggle.checked); // NEW
+            params.append('style', controls.diceStyle.value);
+            params.append('speed', controls.animationSpeed.value);
+
+            const previewUrl = `dice-roller.html?${params.toString()}`;
+            if (controls.previewFrame.src !== previewUrl) {
+                controls.previewFrame.src = previewUrl;
+            }
+            return params.toString();
+        }
+        
+        function generateCode() {
+            const paramsString = updatePreview();
+            const baseUrl = controls.publicUrl.value;
+
+            if (!baseUrl) {
+                alert('Пожалуйста, укажите "Публичную ссылку на dice-roller.html", чтобы сгенерировать код для Genially/Miro.');
+                controls.generatedCode.value = "Ошибка: не указана публичная ссылка на dice-roller.html";
+                return;
+            }
+            
+            const diceUrl = `${baseUrl}?${paramsString}`;
+            const iframeCode = `<iframe src="${diceUrl}" width="200" height="200" frameborder="0" allowfullscreen="true" style="border-radius: 15px;"></iframe>`;
+            controls.generatedCode.value = iframeCode;
+        }
+
+        function copyCode() {
+            if (controls.generatedCode.value) {
+                controls.generatedCode.select();
+                document.execCommand('copy');
+                alert('Код скопирован в буфер обмена!');
+            }
+        }
+
+        // Event Listeners
+        Object.values(controls).forEach(element => {
+            if (element.tagName === 'INPUT' || element.tagName === 'SELECT') {
+                element.addEventListener('input', updatePreview);
+            }
+        });
+        
+        controls.neonToggle.addEventListener('change', () => {
+             controls.neonColor.style.display = controls.neonToggle.checked ? 'inline-block' : 'none';
+             updatePreview();
+        });
+
+        // Initial setup for neon color input visibility
+        controls.neonColor.style.display = controls.neonToggle.checked ? 'inline-block' : 'none';
+
+        controls.generateBtn.addEventListener('click', generateCode);
+        controls.copyBtn.addEventListener('click', copyCode);
+
+        // Initial load
+        updatePreview();
+    </script>
+</body>
+</html>

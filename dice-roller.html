@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dice Roller</title>
+    <style>
+        :root {
+            --dice-color: #FF0000;
+            --dot-color: #FFFFFF;
+            --neon-color: #00FFFF;
+            --animation-duration: 0.8s; /* normal */
+        }
+        html, body {
+            width: 100vw;
+            height: 100vh;
+            margin: 0; padding: 0;
+            overflow: hidden;
+        }
+        body {
+            background-color: transparent;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 500px; /* Для 3D-эффекта */
+            cursor: pointer;
+        }
+
+        .dice-container {
+            width: 80%; /* Занимаем 80% от iframe */
+            height: 80%;
+            max-width: 150px; /* Максимальный размер кубика */
+            max-height: 150px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform var(--animation-duration) ease-out; /* Анимация броска */
+            border-radius: 15%; /* Немного скругленные грани */
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5); /* Общая тень */
+        }
+        .dice-container.neon {
+            box-shadow: 0 0 10px var(--neon-color), 0 0 25px var(--neon-color), 0 0 50px var(--neon-color);
+        }
+
+        .face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: var(--dice-color);
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 4em; /* Размер цифры для 2D */
+            color: var(--dot-color); /* Цвет цифры для 2D */
+            font-weight: bold;
+            border-radius: 15%; /* Скругление граней */
+            box-sizing: border-box; /* Учитываем padding/border в размере */
+        }
+
+        /* 3D-позиционирование граней */
+        .face-1 { transform: rotateY(   0deg ) translateZ( 50% ); }
+        .face-2 { transform: rotateX( 180deg ) translateZ( 50% ); }
+        .face-3 { transform: rotateY(  90deg ) translateZ( 50% ); }
+        .face-4 { transform: rotateY( -90deg ) translateZ( 50% ); }
+        .face-5 { transform: rotateX(  90deg ) translateZ( 50% ); }
+        .face-6 { transform: rotateX( -90deg ) translateZ( 50% ); }
+
+        /* Для плоского стиля */
+        .dice-container.flat .face {
+            background-color: var(--dice-color);
+            box-shadow: none;
+            border-radius: 15%;
+            transform: none !important;
+            display: none; /* Все грани скрыты */
+            font-size: 6vw; /* Резиновый размер для цифры */
+            min-font-size: 40px; /* Минимальный размер цифры */
+        }
+        .dice-container.flat .face.active {
+            display: flex; /* Активная грань показана */
+            position: relative; /* Чтобы была в потоке */
+            height: 100%; width: 100%;
+        }
+
+        /* Точки для 3D */
+        .dot {
+            position: absolute;
+            width: 15%;
+            height: 15%;
+            background-color: var(--dot-color);
+            border-radius: 50%;
+            box-shadow: inset 0 2px 3px rgba(0,0,0,0.5); /* Внутренняя тень точки */
+        }
+        /* Позиционирование точек для каждой грани */
+        .dot-tl { top: 15%; left: 15%; }
+        .dot-tr { top: 15%; right: 15%; }
+        .dot-bl { bottom: 15%; left: 15%; }
+        .dot-br { bottom: 15%; right: 15%; }
+        .dot-c { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .dot-cl { top: 50%; left: 15%; transform: translateY(-50%); }
+        .dot-cr { top: 50%; right: 15%; transform: translateY(-50%); }
+        
+        /* Стили для маленьких кубиков - чтобы точки были меньше */
+        @media (max-width: 150px) {
+             .dot { width: 18%; height: 18%; }
+             #dice-result { font-size: 50px; }
+        }
+         @media (max-width: 100px) {
+             .dot { width: 20%; height: 20%; }
+             #dice-result { font-size: 30px; }
+        }
+
+    </style>
+</head>
+<body>
+    <div id="dice" class="dice-container">
+        <div class="face face-1" data-value="1"><span class="dot dot-c"></span></div>
+        <div class="face face-2" data-value="2"><span class="dot dot-tl"></span><span class="dot dot-br"></span></div>
+        <div class="face face-3" data-value="3"><span class="dot dot-tl"></span><span class="dot dot-c"></span><span class="dot dot-br"></span></div>
+        <div class="face face-4" data-value="4"><span class="dot dot-tl"></span><span class="dot dot-tr"></span><span class="dot dot-bl"></span><span class="dot dot-br"></span></div>
+        <div class="face face-5" data-value="5"><span class="dot dot-tl"></span><span class="dot dot-tr"></span><span class="dot dot-c"></span><span class="dot dot-bl"></span><span class="dot dot-br"></span></div>
+        <div class="face face-6" data-value="6"><span class="dot dot-tl"></span><span class="dot dot-tr"></span><span class="dot dot-cl"></span><span class="dot dot-cr"></span><span class="dot dot-bl"></span><span class="dot dot-br"></span></div>
+    </div>
+
+    <!-- NEW: Audio element for dice sound -->
+    <audio id="diceSound" src="https://files.catbox.moe/xk6v0c.mp3" preload="auto"></audio>
+
+    <script>
+        const dice = document.getElementById('dice');
+        const diceSound = document.getElementById('diceSound'); // NEW
+        let currentRotation = {x: 0, y: 0};
+        let isRolling = false;
+        let enableSound = false; // NEW
+
+        // Apply settings from URL parameters
+        function applySettings() {
+            const params = new URLSearchParams(window.location.search);
+            const root = document.documentElement;
+
+            root.style.setProperty('--dice-color', params.get('diceColor') || '#FF0000');
+            root.style.setProperty('--dot-color', params.get('dotColor') || '#FFFFFF');
+            
+            if (params.get('neon') === 'true') {
+                dice.classList.add('neon');
+                root.style.setProperty('--neon-color', params.get('neonColor') || '#00FFFF');
+            } else {
+                dice.classList.remove('neon');
+            }
+
+            enableSound = params.get('sound') === 'true'; // NEW
+
+            if (params.get('style') === 'flat') {
+                dice.classList.add('flat');
+            } else {
+                dice.classList.remove('flat');
+            }
+
+            let duration = '0.8s'; // normal
+            switch (params.get('speed')) {
+                case 'slow': duration = '1.2s'; break;
+                case 'fast': duration = '0.4s'; break;
+            }
+            root.style.setProperty('--animation-duration', duration);
+        }
+
+        function rollDice() {
+            if (isRolling) return;
+            isRolling = true;
+
+            // NEW: Play sound if enabled
+            if (enableSound) {
+                diceSound.currentTime = 0; // Reset sound to start
+                diceSound.play().catch(e => console.warn("Failed to play dice sound:", e));
+            }
+
+            const randomValue = Math.floor(Math.random() * 6) + 1; // 1 to 6
+
+            if (dice.classList.contains('flat')) {
+                // Flat style: just show the number
+                document.querySelectorAll('.face').forEach(face => face.classList.remove('active'));
+                const activeFace = document.querySelector(`.face-${randomValue}`);
+                if (activeFace) {
+                    activeFace.classList.add('active');
+                    activeFace.textContent = randomValue; // Show number for flat style
+                }
+                setTimeout(() => { isRolling = false; }, parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--animation-duration')) * 1000);
+            } else {
+                // 3D style: apply rotation
+                let rotX, rotY;
+                // Predefined rotations for each face value to appear on top
+                switch (randomValue) {
+                    case 1: rotX = 0; rotY = 0; break;
+                    case 2: rotX = 180; rotY = 0; break;
+                    case 3: rotX = 0; rotY = 90; break;
+                    case 4: rotX = 0; rotY = -90; break;
+                    case 5: rotX = -90; rotY = 0; break;
+                    case 6: rotX = 90; rotY = 0; break;
+                }
+                
+                // Add extra random rotations for a more dynamic look
+                const extraRotX = Math.floor(Math.random() * 4) * 360;
+                const extraRotY = Math.floor(Math.random() * 4) * 360;
+
+                dice.style.transform = `rotateX(${rotX + extraRotX}deg) rotateY(${rotY + extraRotY}deg)`;
+
+                // Reset rotation for next roll (optional, could be removed for more random feeling)
+                currentRotation.x = rotX + extraRotX;
+                currentRotation.y = rotY + extraRotY;
+
+                // Reset isRolling after animation completes
+                setTimeout(() => {
+                    isRolling = false;
+                }, parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--animation-duration')) * 1000);
+            }
+        }
+
+        // Event Listeners
+        dice.addEventListener('click', rollDice);
+
+        // Initial setup
+        applySettings();
+        // Initial random roll
+        setTimeout(rollDice, 100); // Roll once on load
+    </script>
+</body>
+</html>
