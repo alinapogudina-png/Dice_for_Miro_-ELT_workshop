@@ -6,15 +6,15 @@
     <title>Game Tool</title>
     <style>
         :root {
-            --dice-background-color: #574FFF; /* Background for regular dice */
-            --number-color: #FFFFFF; /* Color for dice numbers */
+            --dice-background-color: #574FFF; /* Default for regular dice */
+            --number-color: #FFFFFF; /* Default for dice numbers */
             --neon-color: #00FFFF;
         }
         html, body {
             width: 100vw;
             height: 100vh;
             margin: 0; padding: 0;
-            overflow: hidden;
+            overflow: hidden; /* Prevent iframe scrollbars if content overflows */
         }
         body {
             background-color: transparent;
@@ -28,31 +28,40 @@
             user-select: none;
         }
 
-        .tool-container {
-            width: 80%; 
-            height: 80%;
-            max-width: 150px; 
-            max-height: 150px;
-            position: relative;
-            box-sizing: border-box; 
-            display: flex; 
-            justify-content: center;
-            align-items: center;
-            box-shadow: none; 
-            transition: box-shadow 0.3s ease-out; /* Smooth neon transition */
-        }
-        .tool-container.neon {
-            box-shadow: 0 0 10px var(--neon-color), 0 0 25px var(--neon-color), 0 0 50px var(--neon-color);
-        }
-
-        /* --- Dice specific styles --- */
-        .dice-style {
-            background-color: var(--dice-background-color);
-            border-radius: 20%;
-            width: 100%; height: 100%;
+        /* Outer wrapper for scaling neon effect */
+        .game-tool-wrapper {
+            width: 100%; 
+            height: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
+            box-shadow: none; /* No default shadow */
+            transition: box-shadow 0.3s ease-out; /* Smooth neon transition */
+            padding: 1vw; /* Crucial for neon shadow to not be clipped */
+            box-sizing: border-box; /* Ensure padding is included in element's total size */
+        }
+        .game-tool-wrapper.neon {
+            /* Use relative units for shadow spread for better scaling with iframe */
+            box-shadow: 0 0 1vw var(--neon-color), 0 0 2.5vw var(--neon-color), 0 0 5vw var(--neon-color);
+        }
+
+        /* Inner container for the actual dice/coin content */
+        .tool-content {
+            width: 100%; 
+            height: 100%;
+            max-width: 150px; /* Max size for the content itself */
+            max-height: 150px;
+            position: relative;
+            display: flex; 
+            justify-content: center;
+            align-items: center;
+            border-radius: 20%; /* Default for dice */
+            overflow: hidden; /* Ensure image/content stays within bounds */
+        }
+        
+        /* --- Regular Dice specific styles --- */
+        .dice-style {
+            background-color: var(--dice-background-color);
             transition: background-color 0.3s ease-out;
         }
 
@@ -69,27 +78,18 @@
 
         /* --- Wooden Dice specific styles --- */
         .wood-style {
-            background-image: url('https://www.transparenttextures.com/patterns/wood-pattern.png'); /* Public domain wood texture */
-            background-size: cover;
-            background-color: transparent; /* Ensure wood texture is visible */
-            border: none;
-            border-radius: 20%;
-            width: 100%; height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            background-color: transparent; /* Background image will cover it */
         }
-        .wood-style .dice-number {
-            color: #FFFFFF; /* White dots for wooden dice */
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5); /* For better contrast on wood */
+        .wood-style img {
+            width: 100%; height: 100%;
+            object-fit: contain; /* Scale image to fit, maintain aspect ratio */
+            display: block;
+            animation: bounce 0.5s ease-out; /* Reuse bounce for number images */
         }
 
         /* --- Coin specific styles --- */
         .coin-style {
-            width: 100%; height: 100%;
             border-radius: 50%; /* Round shape for coin */
-            background-color: transparent; /* Background managed by image */
-            overflow: hidden; /* To keep image within bounds */
         }
         .coin-style img {
             width: 100%; height: 100%;
@@ -118,22 +118,35 @@
     </style>
 </head>
 <body>
-    <div id="tool" class="tool-container">
-        <!-- Content will be dynamically loaded/swapped by JS -->
+    <div id="toolWrapper" class="game-tool-wrapper">
+        <div id="toolContent" class="tool-content">
+            <!-- Content will be dynamically loaded/swapped by JS -->
+        </div>
     </div>
 
     <audio id="soundEffect" src="https://files.catbox.moe/xk6v0c.mp3" preload="auto"></audio>
 
     <script>
-        const toolContainer = document.getElementById('tool');
+        const toolWrapper = document.getElementById('toolWrapper');
+        const toolContent = document.getElementById('toolContent');
         const soundEffect = document.getElementById('soundEffect');
         let isRolling = false;
         let enableSound = false;
         
-        // Coin images
+        // Your Coin images
         const coinImages = {
-            heads: 'https://www.svgrepo.com/show/368551/coin-heads-obverse.svg', // Public domain SVG
-            tails: 'https://www.svgrepo.com/show/368552/coin-tails-reverse.svg'   // Public domain SVG
+            heads: 'https://i.postimg.cc/VN3JLz7b/10.png',
+            tails: 'https://i.postimg.cc/760f5jcd/9.png'
+        };
+
+        // Your Wooden dice images for each face
+        const woodDiceImages = {
+            1: 'https://i.postimg.cc/vmp4HGP1/3.png',
+            2: 'https://i.postimg.cc/SKwnNmZn/4.png',
+            3: 'https://i.postimg.cc/GpZ4hbM8/5.png',
+            4: 'https://i.postimg.cc/W4Qdbs97/6.png',
+            5: 'https://i.postimg.cc/1twf8bT7/7.png',
+            6: 'https://i.postimg.cc/tTWYs8fr/8.png'
         };
 
         function applySettings() {
@@ -143,13 +156,14 @@
             const isCoin = params.get('coin') === 'true';
             const isWood = params.get('wood') === 'true';
             
-            // Clear existing content and classes
-            toolContainer.innerHTML = '';
-            toolContainer.classList.remove('neon', 'dice-style', 'wood-style', 'coin-style');
-
-            // Apply neon effect
+            // Clear existing content and classes from toolContent and toolWrapper
+            toolContent.innerHTML = '';
+            toolContent.classList.remove('dice-style', 'wood-style', 'coin-style');
+            toolWrapper.classList.remove('neon'); // Clear neon from wrapper
+            
+            // Apply neon effect to the wrapper
             if (params.get('neon') === 'true') {
-                toolContainer.classList.add('neon');
+                toolWrapper.classList.add('neon');
                 root.style.setProperty('--neon-color', params.get('neonColor') || '#00FFFF');
             }
 
@@ -157,29 +171,29 @@
 
             if (isCoin) {
                 // --- Coin setup ---
-                toolContainer.classList.add('coin-style');
+                toolContent.classList.add('coin-style');
                 const coinImage = document.createElement('img');
                 coinImage.id = 'coinImage';
                 coinImage.src = coinImages.heads; // Default to heads
-                toolContainer.appendChild(coinImage);
+                coinImage.alt = 'Coin Heads';
+                toolContent.appendChild(coinImage);
             } else if (isWood) {
                 // --- Wooden Dice setup ---
-                toolContainer.classList.add('wood-style');
-                const diceNumberSpan = document.createElement('span');
-                diceNumberSpan.id = 'diceNumber';
-                diceNumberSpan.classList.add('dice-number');
-                diceNumberSpan.textContent = '1';
-                toolContainer.appendChild(diceNumberSpan);
-                root.style.setProperty('--dice-background-color', 'transparent'); // Overridden by image
-                root.style.setProperty('--number-color', '#FFFFFF'); // Fixed white for wood
+                toolContent.classList.add('wood-style');
+                const woodDiceImage = document.createElement('img');
+                woodDiceImage.id = 'woodDiceImage';
+                woodDiceImage.src = woodDiceImages[1]; // Default to face 1
+                woodDiceImage.alt = 'Wooden Dice Face 1';
+                toolContent.appendChild(woodDiceImage);
+                root.style.setProperty('--dice-background-color', 'transparent'); // Ensure no background color for wood
             } else {
                 // --- Regular Dice setup ---
-                toolContainer.classList.add('dice-style');
+                toolContent.classList.add('dice-style');
                 const diceNumberSpan = document.createElement('span');
                 diceNumberSpan.id = 'diceNumber';
                 diceNumberSpan.classList.add('dice-number');
                 diceNumberSpan.textContent = '1';
-                toolContainer.appendChild(diceNumberSpan);
+                toolContent.appendChild(diceNumberSpan);
 
                 root.style.setProperty('--dice-background-color', params.get('diceColor') || '#574FFF');
                 root.style.setProperty('--number-color', params.get('numberColor') || '#FFFFFF');
@@ -196,7 +210,7 @@
                 soundEffect.play().catch(e => console.warn("Failed to play sound:", e));
             }
 
-            if (toolContainer.classList.contains('coin-style')) {
+            if (toolContent.classList.contains('coin-style')) {
                 // --- Coin flip logic ---
                 const coinImage = document.getElementById('coinImage');
                 const randomSide = Math.random() < 0.5 ? 'heads' : 'tails';
@@ -206,17 +220,32 @@
                 coinImage.style.animation = `coinFlipAnim 0.3s ease-out`;
 
                 coinImage.src = coinImages[randomSide];
+                coinImage.alt = 'Coin ' + randomSide.charAt(0).toUpperCase() + randomSide.slice(1); // Update alt text
                 setTimeout(() => {
                     isRolling = false;
                 }, 300); // Animation duration
+            } else if (toolContent.classList.contains('wood-style')) {
+                // --- Wooden Dice roll logic ---
+                const woodDiceImage = document.getElementById('woodDiceImage');
+                const randomValue = Math.floor(Math.random() * 6) + 1; // 1 to 6
+                
+                woodDiceImage.style.animation = 'none'; // Reset animation
+                void woodDiceImage.offsetWidth; // Trigger reflow
+                woodDiceImage.style.animation = `bounce 0.5s ease-out`;
+
+                woodDiceImage.src = woodDiceImages[randomValue];
+                woodDiceImage.alt = 'Wooden Dice Face ' + randomValue; // Update alt text
+                setTimeout(() => {
+                    isRolling = false;
+                }, 500); // Animation duration
             } else {
-                // --- Dice roll logic ---
+                // --- Regular Dice roll logic ---
                 const diceNumberSpan = document.getElementById('diceNumber');
                 const randomValue = Math.floor(Math.random() * 6) + 1; // 1 to 6
                 
                 diceNumberSpan.style.animation = 'none'; // Reset animation
                 void diceNumberSpan.offsetWidth; // Trigger reflow
-                diceNumberSpan.style.animation = `bounce 0.5s ease-out`; // Fixed animation duration
+                diceNumberSpan.style.animation = `bounce 0.5s ease-out`;
 
                 diceNumberSpan.textContent = randomValue;
                 setTimeout(() => {
@@ -226,7 +255,7 @@
         }
 
         // Event Listeners
-        toolContainer.addEventListener('click', rollTool);
+        toolContent.addEventListener('click', rollTool); // Click on toolContent
 
         // Initial setup
         applySettings();
