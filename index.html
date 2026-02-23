@@ -136,6 +136,11 @@
     </style>
 </head>
 <body>
+    <!-- 
+        Copyright (c) 2026 Alina Pogudina @ELT_workshop. All rights reserved.
+        This code is protected by copyright law. Unauthorized copying or distribution is prohibited.
+        For licensing or inquiries, please contact Alina Pogudina @ELT_workshop.
+    -->
 
     <div class="editor-panel">
         <h1>Редактор игрового инструмента</h1>
@@ -185,7 +190,7 @@
         <textarea id="generated-code" readonly placeholder="Здесь появится ваш iframe код..."></textarea>
         <button id="copyBtn">Копировать код</button>
 
-        <p class="copyright">©ELT_workshop</p>
+        <p class="copyright">©2026 Alina Pogudina @ELT_workshop</p>
     </div>
 
     <div class="preview-panel">
@@ -194,6 +199,11 @@
     </div>
 
     <script>
+        /*
+            Copyright (c) 2026 Alina Pogudina @ELT_workshop. All rights reserved.
+            This JavaScript code is protected by copyright law. Unauthorized copying or distribution is prohibited.
+            For licensing or inquiries, please contact Alina Pogudina @ELT_workshop.
+        */
         const controls = {
             publicUrl: document.getElementById('publicUrl'),
             coinToggle: document.getElementById('coinToggle'),
@@ -269,7 +279,6 @@
             const toolUrl = `${baseUrl}?${paramsString}`;
             const width = controls.coinToggle.checked ? '150' : '200'; 
             const height = controls.coinToggle.checked ? '150' : '200';
-            // NEW: Added allowtransparency="true" and set background-color: transparent on style
             const iframeCode = `<iframe src="${toolUrl}" width="${width}" height="${height}" frameborder="0" allowfullscreen="true" allowtransparency="true" style="border-radius: 15px; background-color: transparent;"></iframe>`; 
             controls.generatedCode.value = iframeCode;
         }
@@ -290,16 +299,4 @@
         });
         
         controls.neonToggle.addEventListener('change', toggleInputStates);
-        controls.coinToggle.addEventListener('change', toggleInputStates);
-        controls.woodToggle.addEventListener('change', toggleInputStates);
-        controls.diceSoundToggle.addEventListener('change', updatePreview); 
-        controls.coinSoundToggle.addEventListener('change', updatePreview); 
-
-        controls.generateBtn.addEventListener('click', generateCode);
-        controls.copyBtn.addEventListener('click', copyCode);
-
-        // Initial load
-        toggleInputStates();
-    </script>
-</body>
-</html>
+        controls.coinToggle.addEventListener('change
