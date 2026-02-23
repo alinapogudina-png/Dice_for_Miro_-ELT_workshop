@@ -299,4 +299,16 @@
         });
         
         controls.neonToggle.addEventListener('change', toggleInputStates);
-        controls.coinToggle.addEventListener('change
+        controls.coinToggle.addEventListener('change', toggleInputStates);
+        controls.woodToggle.addEventListener('change', toggleInputStates);
+        controls.diceSoundToggle.addEventListener('change', updatePreview); 
+        controls.coinSoundToggle.addEventListener('change', updatePreview); 
+
+        controls.generateBtn.addEventListener('click', generateCode);
+        controls.copyBtn.addEventListener('click', copyCode);
+
+        // Initial load
+        toggleInputStates();
+    </script>
+</body>
+</html>
