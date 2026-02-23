@@ -44,7 +44,6 @@
         /* General neon glow styles for elements that need filter: drop-shadow */
         /* Applied to image or number span */
         .neon-filter-glow {
-            /* NEW: Increased values for wider glow */
             filter: drop-shadow(0 0 1.2vw var(--neon-color)) 
                     drop-shadow(0 0 2.5vw var(--neon-color)) 
                     drop-shadow(0 0 4vw var(--neon-color));
@@ -54,7 +53,6 @@
         /* General neon glow styles for elements that need box-shadow */
         /* Applied to the background div of the regular dice */
         .neon-box-glow {
-            /* NEW: Increased values for wider glow */
             box-shadow: 0 0 1.5vw var(--neon-color), 0 0 4vw var(--neon-color), 0 0 7.5vw var(--neon-color);
             transition: box-shadow 0.3s ease-out;
         }
@@ -122,6 +120,11 @@
     </style>
 </head>
 <body>
+    <!-- 
+        Copyright (c) 2026 Alina Pogudina @ELT_workshop. All rights reserved.
+        This HTML/CSS code is protected by copyright law. Unauthorized copying or distribution is prohibited.
+        For licensing or inquiries, please contact Alina Pogudina @ELT_workshop.
+    -->
     <div id="toolContainer" class="tool-container">
         <!-- Content will be dynamically loaded/swapped by JS -->
     </div>
@@ -130,6 +133,11 @@
     <audio id="coinSoundEffect" src="https://files.catbox.moe/d36fio.mp3" preload="auto"></audio>
 
     <script>
+        /*
+            Copyright (c) 2026 Alina Pogudina @ELT_workshop. All rights reserved.
+            This JavaScript code is protected by copyright law. Unauthorized copying or distribution is prohibited.
+            For licensing or inquiries, please contact Alina Pogudina @ELT_workshop.
+        */
         const toolContainer = document.getElementById('toolContainer');
         const diceSoundEffect = document.getElementById('diceSoundEffect');
         const coinSoundEffect = document.getElementById('coinSoundEffect');
