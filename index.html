@@ -138,8 +138,6 @@
 <body>
     <!-- 
         Copyright (c) 2026 Alina Pogudina @ELT_workshop. All rights reserved.
-        This code is protected by copyright law. Unauthorized copying or distribution is prohibited.
-        For licensing or inquiries, please contact Alina Pogudina @ELT_workshop.
     -->
 
     <div class="editor-panel">
@@ -201,8 +199,6 @@
     <script>
         /*
             Copyright (c) 2026 Alina Pogudina @ELT_workshop. All rights reserved.
-            This JavaScript code is protected by copyright law. Unauthorized copying or distribution is prohibited.
-            For licensing or inquiries, please contact Alina Pogudina @ELT_workshop.
         */
         const controls = {
             publicUrl: document.getElementById('publicUrl'),
@@ -279,7 +275,8 @@
             const toolUrl = `${baseUrl}?${paramsString}`;
             const width = controls.coinToggle.checked ? '150' : '200'; 
             const height = controls.coinToggle.checked ? '150' : '200';
-            const iframeCode = `<iframe src="${toolUrl}" width="${width}" height="${height}" frameborder="0" allowfullscreen="true" allowtransparency="true" style="border-radius: 15px; background-color: transparent;"></iframe>`; 
+            // ДОБАВЛЕН ATTR allow="autoplay"
+            const iframeCode = `<iframe src="${toolUrl}" width="${width}" height="${height}" frameborder="0" allow="autoplay" allowfullscreen="true" allowtransparency="true" style="border-radius: 15px; background-color: transparent;"></iframe>`; 
             controls.generatedCode.value = iframeCode;
         }
 
